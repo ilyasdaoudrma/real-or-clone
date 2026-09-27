@@ -1,0 +1,17 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+venv*/
+roc_data/
+checkpoints/
+runs/
+*.wav
+*.flac
+*.mp3
+*.opus
+*.safetensors
+*.pt
+*.bin
+node_modules/
+dist/

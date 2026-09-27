@@ -1,0 +1,13 @@
+# Brev image already ships torch + CUDA. Install the rest:
+huggingface_hub>=0.30
+python-dotenv
+tqdm
+soundfile
+pandas
+scikit-learn
+transformers>=4.44
+torchaudio
+fastapi
+uvicorn[standard]
+python-multipart
+openai
