@@ -105,6 +105,43 @@
   .src { font-family: var(--mono); font-size: .7rem; color: var(--muted); margin-top: 14px; }
   .again { margin-top: 14px; background: none; border: 1px solid var(--line-2); color: var(--text); border-radius: 999px; padding: 9px 16px; font: 600 .85rem var(--body); cursor: pointer; }
   footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: space-between; }
+  .views { display: flex; gap: 3px; background: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
+  .views button { border: 0; background: none; color: var(--muted); font: 600 .82rem var(--body); padding: 7px 14px; border-radius: 999px; cursor: pointer; }
+  .views button[aria-pressed="true"] { background: var(--accent); color: var(--ink); }
+  .head-right { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+  .signin { border: 1px solid var(--line-2); background: none; color: var(--text); font: 600 .82rem var(--body); padding: 8px 14px; border-radius: 999px; cursor: pointer; }
+  .signin:hover { border-color: var(--accent); color: var(--accent); }
+  #userBtn:empty { display: none; }
+  .view[hidden] { display: none !important; }
+  .page-title { font-family: var(--display); font-weight: 800; font-size: clamp(1.8rem, 4.5vw, 2.8rem); letter-spacing: -.03em; margin: 36px 0 6px; }
+  .page-sub { color: var(--muted); margin: 0 0 22px; font-size: .92rem; }
+  .hist { display: grid; gap: 10px; }
+  .hrow { display: grid; grid-template-columns: auto 1fr auto auto auto; gap: 12px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px 14px; }
+  @media (max-width: 620px) { .hrow { grid-template-columns: auto 1fr auto; } .hrow .hscore { display: none; } }
+  .chip { font: 600 .72rem var(--mono); padding: 5px 10px; border-radius: 999px; white-space: nowrap; }
+  .chip.likely_real { background: rgba(46,229,157,.12); color: var(--real); }
+  .chip.likely_clone { background: rgba(255,77,94,.12); color: var(--clone); }
+  .chip.uncertain { background: rgba(255,176,32,.12); color: var(--unsure); }
+  .hname { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hsub { font-family: var(--mono); font-size: .7rem; color: var(--muted); }
+  .hscore { font-family: var(--mono); font-size: .9rem; }
+  .icon-btn { border: 1px solid var(--line-2); background: none; color: var(--text); width: 36px; height: 36px; border-radius: 10px; cursor: pointer; font-size: .9rem; }
+  .icon-btn:hover { border-color: var(--accent); }
+  .icon-btn.del:hover { border-color: var(--clone); color: var(--clone); }
+  .empty { color: var(--muted); border: 1px dashed var(--line-2); border-radius: var(--r-md); padding: 28px; text-align: center; display: grid; gap: 14px; justify-items: center; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 760px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 18px; }
+  .kpi b { display: block; font-family: var(--display); font-size: 2.2rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }
+  .kpi span { color: var(--muted); font-size: .82rem; }
+  .dist { display: flex; height: 14px; border-radius: 99px; overflow: hidden; background: rgba(255,255,255,.06); margin: 14px 0 6px; }
+  .dist i { display: block; height: 100%; }
+  .section-h { font-family: var(--mono); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 34px 0 12px; }
+  .figs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 760px) { .figs { grid-template-columns: 1fr; } }
+  .figs img { width: 100%; border-radius: var(--r-md); background: #fff; display: block; }
+  .figs .wide { grid-column: 1 / -1; }
+  .saved { font-family: var(--mono); font-size: .74rem; color: var(--accent); margin-top: 12px; }
   [dir="rtl"] h1, [dir="rtl"] .vbig { font-family: var(--body); letter-spacing: 0; line-height: 1.2; }
   @media (prefers-reduced-motion: reduce) { .glow, .cta.on .dot, .stage.active i { animation: none; } }
 </style>
@@ -114,10 +151,18 @@
 <main>
   <header>
     <div class="brand"><i></i>Real <b>or</b> Clone?</div>
+    <div class="head-right">
+    <nav class="views" aria-label="Sections">
+      <button data-view="check" aria-pressed="true" data-t="navCheck"></button><button data-view="history" data-t="navHistory"></button><button data-view="dash" data-t="navDash"></button>
+    </nav>
     <nav class="seg" aria-label="Language">
       <button data-lang="ar">ع</button><button data-lang="fr">FR</button><button data-lang="en" aria-pressed="true">EN</button>
     </nav>
+    <button class="signin" id="signInBtn" hidden data-t="signIn"></button>
+    <div id="userBtn"></div>
+    </div>
   </header>
+  <div class="view" id="view-check">
 
   <section class="hero">
     <div class="intro">
@@ -179,10 +224,46 @@
         <h2 data-t="tipsTitle"></h2>
         <ol class="tips" id="tips"></ol>
         <div class="src" id="src"></div>
+        <div class="saved" id="savedNote"></div>
         <button class="again" id="again" data-t="again"></button>
       </div>
     </div>
   </section>
+
+  </div>
+
+  <div class="view" id="view-history" hidden>
+    <h2 class="page-title" data-t="navHistory"></h2>
+    <p class="page-sub">🔐 <span data-t="histNote"></span></p>
+    <div class="hist" id="hist"></div>
+  </div>
+
+  <div class="view" id="view-dash" hidden>
+    <h2 class="page-title" data-t="navDash"></h2>
+    <p class="page-sub" data-t="dashNote"></p>
+    <div id="myStats">
+      <div class="kpis">
+        <div class="kpi"><b id="kTotal">–</b><span data-t="kTotal"></span></div>
+        <div class="kpi"><b id="kClone" style="color:var(--clone)">–</b><span data-t="kClone"></span></div>
+        <div class="kpi"><b id="kReal" style="color:var(--real)">–</b><span data-t="kReal"></span></div>
+        <div class="kpi"><b id="kUnsure" style="color:var(--unsure)">–</b><span data-t="kUnsure"></span></div>
+      </div>
+      <div class="dist" id="dist"></div>
+    </div>
+    <div class="section-h" data-t="perfTitle"></div>
+    <div class="kpis">
+      <div class="kpi"><b style="color:var(--accent)">96.1%</b><span data-t="m1"></span></div>
+      <div class="kpi"><b>2.4%</b><span data-t="m2"></span></div>
+      <div class="kpi"><b>5.2%</b><span data-t="m3"></span></div>
+      <div class="kpi"><b>7.2%</b><span data-t="m4"></span></div>
+    </div>
+    <div class="section-h" data-t="figTitle"></div>
+    <div class="figs">
+      <img src="figures/eer_by_run.png" alt="Equal error rate by test set, runs A/B/C" loading="lazy">
+      <img src="figures/false_alarms_by_run.png" alt="Real voices wrongly flagged, runs A/B/C" loading="lazy">
+      <img class="wide" src="figures/confusion_matrices.png" alt="Confusion matrices for runs A/B/C" loading="lazy">
+    </div>
+  </div>
 
   <footer><span data-t="footer"></span><span>XLS-R 300M fine-tuned · NVIDIA Brev · GOMYCODE 2026</span></footer>
 </main>
@@ -219,6 +300,7 @@ const T = {
         errors: { too_short: "قصير جدًا: ثانية واحدة على الأقل.", too_long: "طويل جدًا: 60 ثانية كحد أقصى.", bad_audio: "تعذّرت قراءة الملف الصوتي.", too_many_requests: "طلبات كثيرة، انتظر دقيقة.", network: "تعذّر الوصول إلى الخادم. حاول مجددًا.", mic: "تم رفض الوصول إلى الميكروفون." },
         tipsBy: { llm: "نصائح كتبها ذكاء اصطناعي انطلاقًا من النتيجة فقط", template: "نصائح أمان عامة" } },
 };
+for (const [l, extra] of Object.entries({"en": {"navCheck": "Check", "navHistory": "History", "navDash": "Dashboard", "signIn": "Sign in", "privacy": "Without an account nothing is kept. Signed in, the audio and its result are saved to your private history; you can delete them anytime.", "histNote": "Your private history: each voice note and its result. Only you can see it, and you can delete any item.", "histEmpty": "No checks yet. Analyse a voice note and it will appear here.", "needLogin": "Sign in to keep a private history of your checks.", "dashNote": "Your checks, and how our model performs on held-out test data.", "kTotal": "voice notes checked", "kClone": "likely clones", "kReal": "likely real", "kUnsure": "uncertain", "perfTitle": "Model performance · held-out test (10,122 clips)", "m1": "accuracy on unseen voices", "m2": "EER on unseen generators (ElevenLabs, OpenAI…)", "m3": "EER on our fresh clones", "m4": "real voices wrongly flagged", "figTitle": "Before vs after · runs A / B / C", "saved": "✓ Saved to your history", "notSaved": "Sign in to save this check to your history", "play": "Play", "delBtn": "Delete"}, "fr": {"navCheck": "Vérifier", "navHistory": "Historique", "navDash": "Tableau de bord", "signIn": "Se connecter", "privacy": "Sans compte, rien n'est conservé. Connecté, l'audio et son résultat sont enregistrés dans votre historique privé ; vous pouvez les supprimer à tout moment.", "histNote": "Votre historique privé : chaque vocal et son résultat. Vous seul le voyez, et vous pouvez supprimer chaque élément.", "histEmpty": "Aucune vérification. Analysez un vocal et il apparaîtra ici.", "needLogin": "Connectez-vous pour garder un historique privé de vos vérifications.", "dashNote": "Vos vérifications, et les performances de notre modèle sur des données de test indépendantes.", "kTotal": "vocaux vérifiés", "kClone": "clones probables", "kReal": "probablement réels", "kUnsure": "incertains", "perfTitle": "Performances du modèle · test indépendant (10 122 extraits)", "m1": "précision sur des voix inconnues", "m2": "EER sur des générateurs inconnus (ElevenLabs, OpenAI…)", "m3": "EER sur nos nouveaux clones", "m4": "vraies voix signalées à tort", "figTitle": "Avant / après · runs A / B / C", "saved": "✓ Enregistré dans votre historique", "notSaved": "Connectez-vous pour enregistrer cette vérification", "play": "Écouter", "delBtn": "Supprimer"}, "ar": {"navCheck": "تحقّق", "navHistory": "السجل", "navDash": "لوحة المتابعة", "signIn": "تسجيل الدخول", "privacy": "بدون حساب لا نحتفظ بأي شيء. عند تسجيل الدخول يُحفظ الصوت ونتيجته في سجلك الخاص، ويمكنك حذفهما في أي وقت.", "histNote": "سجلك الخاص: كل رسالة صوتية ونتيجتها. أنت وحدك تراه، ويمكنك حذف أي عنصر.", "histEmpty": "لا توجد عمليات تحقّق بعد. حلّل رسالة صوتية وستظهر هنا.", "needLogin": "سجّل الدخول لتحتفظ بسجل خاص لعمليات التحقّق.", "dashNote": "عمليات التحقّق الخاصة بك، وأداء نموذجنا على بيانات اختبار مستقلة.", "kTotal": "رسالة تم فحصها", "kClone": "مستنسخة على الأرجح", "kReal": "حقيقية على الأرجح", "kUnsure": "غير مؤكدة", "perfTitle": "أداء النموذج · اختبار مستقل (10٬122 مقطعًا)", "m1": "دقة على أصوات جديدة", "m2": "EER على مولّدات لم يرها (ElevenLabs، OpenAI…)", "m3": "EER على مستنسخاتنا الجديدة", "m4": "أصوات حقيقية صُنّفت خطأً", "figTitle": "قبل / بعد · التجارب A / B / C", "saved": "✓ حُفظ في سجلك", "notSaved": "سجّل الدخول لحفظ هذا الفحص في سجلك", "play": "استماع", "delBtn": "حذف"}})) Object.assign(T[l], extra);
 const ICON = { likely_real: "✓", likely_clone: "!", uncertain: "?" };
 const params = new URLSearchParams(location.search);
 const API = params.get("api") || "";            // same origin by default
@@ -244,6 +326,8 @@ function setLang(l) {
   document.querySelectorAll("header .seg button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.lang === l));
   $("recLabel").textContent = recorder ? T[l].recStop : T[l].recStart;
   if (last) render(last, false);
+  if ($("view-history") && !$("view-history").hidden) renderHistory();
+  if ($("view-dash") && !$("view-dash").hidden) renderDash();
 }
 
 function colorFor(p) { return p >= 0.65 ? "var(--clone)" : p <= 0.35 ? "var(--real)" : "var(--unsure)"; }
@@ -270,6 +354,7 @@ function render(r, animate = true) {
   $("axisEnd").textContent = r.duration.toFixed(1) + "s";
   $("tips").replaceChildren(...r.tips.map((t) => { const li = document.createElement("li"); li.append(span(t)); return li; }));
   $("src").textContent = T[lang].tipsBy[r.tips_source] || "";
+  $("savedNote").textContent = MOCK ? "" : r.saved_id ? T[lang].saved : T[lang].notSaved;
   $("result").classList.add("show");
   if (!animate) return;
   $("result").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -306,7 +391,7 @@ async function analyse(blob, name) {
       fd.append("file", blob, name);
       fd.append("lang", lang);
       if (model) fd.append("model", model);
-      const res = await fetch(API + "/analyze", { method: "POST", body: fd });
+      const res = await fetch(API + "/analyze", { method: "POST", body: fd, headers: await authHeaders() });
       r = await res.json().catch(() => ({ error: "network" }));
       if (!res.ok) { showStages(false); status(T[lang].errors[r.error || r.detail] || T[lang].errors.network, true); return; }
     }
@@ -361,6 +446,87 @@ drop.addEventListener("drop", (e) => { const f = e.dataTransfer.files[0]; if (f)
 $("again").addEventListener("click", () => { $("result").classList.remove("show"); last = null; window.scrollTo({ top: 0, behavior: "smooth" }); });
 document.querySelectorAll("header .seg button").forEach((b) => b.addEventListener("click", () => setLang(b.dataset.lang)));
 setLang("en");
+
+// ---------- Clerk login ----------
+let clerk = null;
+async function authHeaders() {
+  try { const t = clerk?.session ? await clerk.session.getToken() : null; return t ? { Authorization: "Bearer " + t } : {}; }
+  catch { return {}; }
+}
+function refreshAuthUi() {
+  const signedIn = !!clerk?.user;
+  $("signInBtn").hidden = !clerk || signedIn;
+  if (signedIn && !$("userBtn").childElementCount) clerk.mountUserButton($("userBtn"));
+  if (!signedIn && $("userBtn").childElementCount) { clerk.unmountUserButton($("userBtn")); $("userBtn").replaceChildren(); }
+  if (!$("view-history").hidden) renderHistory();
+  if (!$("view-dash").hidden) renderDash();
+}
+fetch(API + "/config").then((r) => r.json()).then((c) => {
+  if (!c.clerk_publishable_key) return;
+  const sc = document.createElement("script");
+  sc.async = true; sc.crossOrigin = "anonymous";
+  sc.setAttribute("data-clerk-publishable-key", c.clerk_publishable_key);
+  sc.src = `https://${c.clerk_frontend_api}/npm/@clerk/clerk-js@5/dist/clerk.browser.js`;
+  sc.onload = async () => { clerk = window.Clerk; await clerk.load(); clerk.addListener(refreshAuthUi); refreshAuthUi(); };
+  document.head.append(sc);
+}).catch(() => {});
+$("signInBtn").addEventListener("click", () => clerk?.openSignIn());
+
+// ---------- history + dashboard (server, per signed-in user) ----------
+function loginPrompt(box) {
+  const d = document.createElement("div"); d.className = "empty";
+  const b = document.createElement("button"); b.className = "signin"; b.textContent = T[lang].signIn; b.onclick = () => clerk?.openSignIn();
+  d.append(span(T[lang].needLogin), b); box.replaceChildren(d);
+}
+async function renderHistory() {
+  const box = $("hist");
+  if (!clerk?.user) { loginPrompt(box); return; }
+  const res = await fetch(API + "/history", { headers: await authHeaders() });
+  const items = res.ok ? (await res.json()).items : [];
+  if (!items.length) { const d = document.createElement("div"); d.className = "empty"; d.textContent = T[lang].histEmpty; box.replaceChildren(d); return; }
+  box.replaceChildren(...items.map((it) => {
+    const row = document.createElement("div"); row.className = "hrow";
+    const chip = span(T[lang][it.verdict]); chip.className = "chip " + it.verdict;
+    const mid = document.createElement("div");
+    const nm = document.createElement("div"); nm.className = "hname"; nm.textContent = it.filename;
+    const sub = document.createElement("div"); sub.className = "hsub";
+    sub.textContent = `${new Date(it.created_at * 1000).toLocaleString(lang === "ar" ? "ar-MA" : lang)} · ${it.duration.toFixed(1)} s · ${it.model}`;
+    mid.append(nm, sub);
+    const sc = span(`${Math.round(it.p_fake * 100)}%`); sc.className = "hscore"; sc.title = T[lang].pClone;
+    const play = document.createElement("button"); play.className = "icon-btn"; play.textContent = "▶"; play.title = T[lang].play;
+    play.onclick = async () => {
+      const r = await fetch(`${API}/history/${it.id}/audio`, { headers: await authHeaders() });
+      if (r.ok) new Audio(URL.createObjectURL(await r.blob())).play();
+    };
+    const del = document.createElement("button"); del.className = "icon-btn del"; del.textContent = "✕"; del.title = T[lang].delBtn;
+    del.onclick = async () => { await fetch(`${API}/history/${it.id}`, { method: "DELETE", headers: await authHeaders() }); renderHistory(); };
+    row.append(chip, mid, sc, play, del);
+    return row;
+  }));
+  anim("#hist .hrow", { opacity: [0, 1], y: [10, 0] }, { delay: motion ? motion.stagger(0.04) : 0, duration: 0.35 });
+}
+async function renderDash() {
+  $("myStats").hidden = !clerk?.user;
+  if (clerk?.user) {
+    const res = await fetch(API + "/stats", { headers: await authHeaders() });
+    const st = res.ok ? await res.json() : { total: 0, by_verdict: {} };
+    const n = (v) => st.by_verdict[v]?.count || 0;
+    const c = { total: st.total, clone: n("likely_clone"), real: n("likely_real"), unsure: n("uncertain") };
+    $("kTotal").textContent = c.total; $("kClone").textContent = c.clone; $("kReal").textContent = c.real; $("kUnsure").textContent = c.unsure;
+    $("dist").replaceChildren(...[["clone", "var(--clone)"], ["unsure", "var(--unsure)"], ["real", "var(--real)"]].map(([k, col]) => {
+      const i = document.createElement("i"); i.style.width = c.total ? (c[k] / c.total * 100) + "%" : "0"; i.style.background = col; return i;
+    }));
+  }
+  anim("#view-dash .kpi", { opacity: [0, 1], y: [14, 0] }, { delay: motion ? motion.stagger(0.05) : 0, duration: 0.4 });
+}
+function showView(v) {
+  document.querySelectorAll(".views button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.view === v));
+  ["check", "history", "dash"].forEach((k) => { $("view-" + k).hidden = k !== v; });
+  if (v === "history") renderHistory();
+  if (v === "dash") renderDash();
+  window.scrollTo({ top: 0 });
+}
+document.querySelectorAll(".views button").forEach((b) => b.addEventListener("click", () => showView(b.dataset.view)));
 
 // Model picker: XLS-R before fine-tuning vs our fine-tuned model, on the same voice note.
 fetch(API + "/health").then((r) => r.json()).then((h) => {

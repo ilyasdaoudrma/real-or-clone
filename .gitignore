@@ -16,3 +16,4 @@ runs/
 node_modules/
 dist/
 .claude/
+storage/

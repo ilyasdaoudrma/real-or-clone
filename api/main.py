@@ -4,7 +4,8 @@
 
 Contract: api/CONTRACT.md. The LLM (Groq, gpt-oss-120b) only WRITES tips from the verdict JSON;
 the verdict comes from the detector alone and is never sent back through the LLM.
-Nothing is stored: the upload lives in a temp file that is deleted right after scoring.
+Anonymous checks keep nothing. Signed-in (Clerk) checks save the audio + result to that user's private,
+deletable history (SQLite + files, see api/store.py).
 """
 import json
 import os
@@ -16,12 +17,13 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from openai import OpenAI
 import torch
 
 from augment.voicenote import SR, load
+from api import auth, store
 from train.detector import Detector
 
 load_dotenv()
@@ -111,6 +113,39 @@ def rate_limited(ip: str) -> bool:
     return len(q) > RATE_LIMIT
 
 
+store.init()
+
+
+@app.get("/config")
+def config() -> dict:
+    return {"clerk_publishable_key": auth.PUBLISHABLE_KEY, "clerk_frontend_api": auth.frontend_api()}
+
+
+@app.get("/history")
+def history(request: Request, limit: int = 50) -> dict:
+    return {"items": store.list_checks(auth.require_user(request), limit)}
+
+
+@app.get("/history/{check_id}/audio")
+def history_audio(check_id: str, request: Request):
+    path = store.audio_path(auth.require_user(request), check_id)
+    if path is None or not path.exists():
+        raise HTTPException(404, "not_found")
+    return FileResponse(path)
+
+
+@app.delete("/history/{check_id}")
+def history_delete(check_id: str, request: Request) -> dict:
+    if not store.delete(auth.require_user(request), check_id):
+        raise HTTPException(404, "not_found")
+    return {"deleted": check_id}
+
+
+@app.get("/stats")
+def user_stats(request: Request) -> dict:
+    return store.stats(auth.require_user(request))
+
+
 @app.get("/health")
 def health() -> dict:
     return {"ok": True, "model": DEFAULT, "checkpoint": Path(CKPT).name, "models": MODEL_LABELS,
@@ -124,6 +159,7 @@ async def analyze(request: Request, file: UploadFile = File(...), lang: str = Fo
         raise HTTPException(429, "too_many_requests")
     lang = lang if lang in LANGS else "en"
     model = model if model in detectors else DEFAULT
+    uid = auth.user_id(request)                      # None = anonymous, nothing saved
     data = await file.read(MAX_BYTES + 1)
     if len(data) > MAX_BYTES:
         return JSONResponse({"error": "too_long"}, status_code=400)
@@ -136,8 +172,7 @@ async def analyze(request: Request, file: UploadFile = File(...), lang: str = Fo
     except Exception:
         return JSONResponse({"error": "bad_audio"}, status_code=400)
     finally:
-        os.remove(tmp_path)  # nothing is kept
-    del data
+        os.remove(tmp_path)  # the temp copy never survives; only signed-in users' history keeps the audio
     dur = len(x) / SR
     if dur < MIN_S:
         return JSONResponse({"error": "too_short"}, status_code=400)
@@ -152,9 +187,11 @@ async def analyze(request: Request, file: UploadFile = File(...), lang: str = Fo
     if core["verdict"] != "likely_real":  # pointing at "suspicious seconds" of a real voice would confuse
         facts["most_suspicious_seconds"] = f"{worst['start']:.0f}-{worst['end']:.0f}"
     tips, source = write_tips(facts, lang)
-    return {**core, "tips": tips, "tips_source": source,
-            "latency_ms": round((time.perf_counter() - t0) * 1000),
-            "model": model, "model_label": MODEL_LABELS[model]}
+    result = {**core, "tips": tips, "tips_source": source,
+              "latency_ms": round((time.perf_counter() - t0) * 1000),
+              "model": model, "model_label": MODEL_LABELS[model]}
+    result["saved_id"] = store.save(uid, result, file.filename or "voice note", data, lang) if uid else None
+    return result
 
 
 web_dir = Path(__file__).resolve().parent.parent / "web"

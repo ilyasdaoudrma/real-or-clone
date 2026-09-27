@@ -86,6 +86,8 @@ Clone generation ~39 clips/min (6 processes on one GPU). Training run (a): 2,169
 | VoxPopuli | HF `facebook/voxpopuli` (fr, en test) | CC0 | varied real speech |
 | MLAAD | HF `mueller91/MLAAD` (fr, en) | CC-BY-NC-4.0 | fake speech |
 | In-the-Wild | HF `mueller91/In-The-Wild` | CC-BY-SA-4.0 | real + fake, speaker-split |
+| Clerk | clerk.com | — | user login (session JWT verified on the API) |
+| SQLite | stdlib | public domain | per-user history of checks (audio + result) |
 | NVIDIA Brev | brev.nvidia.com | — | GPU for generation, training, evaluation, serving |
 | Claude Code (Anthropic) | — | — | coding assistant (see disclosure) |
 
@@ -101,4 +103,4 @@ the trained detector checkpoints (runs a, b, c).
 - **Fallback:** if Groq is down or slow (>8 s), fixed expert-written tips in AR/FR/EN are shown. The model also runs on CPU.
 - **Limits (honest):** trained and tested on English and French only — not validated on Arabic or Darija voice notes.
   An AI can be wrong: the app always tells the user to call back on a known number.
-- **Privacy:** no database; audio is deleted right after analysis; demo voices used with written consent.
+- **Privacy:** anonymous checks keep nothing. Signed-in users (Clerk login) get a private history: the voice note and its result are stored in a SQLite database on the server, visible only to that user and deletable item by item. Voice is sensitive data, so saving only happens for signed-in users who are told so on the page. Demo voices used with written consent.
