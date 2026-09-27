@@ -17,6 +17,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 from openai import OpenAI
@@ -175,6 +176,7 @@ class SecurityHeaders:
 
 
 app.add_middleware(GuardAnalyze)
+app.add_middleware(GZipMiddleware, minimum_size=1024)
 app.add_middleware(SecurityHeaders)
 
 

@@ -7,7 +7,7 @@
 <title>Real or Clone?</title>
 <meta name="description" content="Check if a voice note is a real voice or an AI clone: verdict, suspicious seconds and safety tips in Arabic, French and English.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --ink: #07080A; --ink-2: #0E1014; --card: rgba(16, 18, 22, 0.9); --line: rgba(255, 255, 255, 0.08);
@@ -312,6 +312,29 @@
     h1 { letter-spacing: -.04em; }
   }
   @media (prefers-reduced-motion: reduce) { .art { animation: none; translate: none; } }
+
+  /* ================= performance layer (GPU-cheap) =================
+     - no full-screen noise/blend layer, no animated filters (both repaint the whole screen every frame)
+     - background animates transform only (compositor), glow is static
+     - blur only on 3 surfaces (top bar, main panel, tab bar); other cards are near-opaque, no re-blur per frame
+     - phones / reduced motion / hidden tab: background stands still */
+  .grain { display: none; }
+  .glow { animation: none; }
+  @keyframes kenburns { from { transform: scale(1.04); } to { transform: scale(1.12); } }
+  .art { animation-duration: 40s; will-change: transform; }
+  .kpi, .hrow, .empty, .verdict, #result .panel, .pill { -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .kpi, .hrow, .empty, #result .panel { background: rgba(22,22,24,.9); }
+  .pill { background: rgba(40,40,44,.9); }
+  .verdict.likely_real { background: linear-gradient(160deg, rgba(48,209,88,.22), rgba(22,22,24,.92) 60%); }
+  .verdict.likely_clone { background: linear-gradient(160deg, rgba(255,69,58,.26), rgba(22,22,24,.92) 60%); }
+  .verdict.uncertain { background: linear-gradient(160deg, rgba(255,159,10,.22), rgba(22,22,24,.92) 60%); }
+  :root { --glass: saturate(160%) blur(18px); }
+  .figs, #view-dash .kpis, #hist { content-visibility: auto; contain-intrinsic-size: auto 600px; }
+  .paused .art { animation-play-state: paused; }
+  @media (max-width: 760px), (hover: none) {
+    .art { animation: none; transform: scale(1.06); translate: none; background-image: url("bg/waveform-960.jpg"); }
+    .panel { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(22,22,24,.92); }
+  }
   [dir="rtl"] h1, [dir="rtl"] .vbig { font-family: var(--body); letter-spacing: 0; line-height: 1.2; }
   @media (prefers-reduced-motion: reduce) { .art, .glow, .cta.on .dot, .stage.active i { animation: none; } }
 </style>
@@ -628,7 +651,8 @@ setLang("en");
 
 // Apple-style parallax: the waveform drifts with the pointer and scroll (one rAF per frame, off when reduced motion).
 (() => {
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  document.addEventListener("visibilitychange", () => document.documentElement.classList.toggle("paused", document.hidden));
+  if (matchMedia("(prefers-reduced-motion: reduce), (hover: none), (max-width: 760px)").matches) return;
   const art = document.querySelector(".art");
   let px = 0, py = 0, tx = 0, ty = 0, raf = 0;
   const tick = () => {
