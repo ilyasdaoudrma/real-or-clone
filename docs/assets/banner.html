@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=IBM+Plex+Sans+Arabic:wght@500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; }
+  body { width: var(--w); height: var(--h); background: #07080A; color: #F3F1EA; font-family: "IBM Plex Sans Arabic", sans-serif; overflow: hidden; position: relative; }
+  .art { position: absolute; inset: 0; background: url("../../web/bg/waveform.jpg") center 58% / cover; opacity: .55; }
+  .scrim { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7,8,10,.94) 0%, rgba(7,8,10,.72) 42%, rgba(7,8,10,.2) 75%, rgba(7,8,10,.5) 100%); }
+  .grain { position: absolute; inset: 0; opacity: .08; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .content { position: absolute; left: 72px; top: 50%; transform: translateY(-50%); }
+  .kicker { font-family: "JetBrains Mono", monospace; font-size: 18px; letter-spacing: .22em; color: #D4FF3A; display: flex; align-items: center; gap: 14px; }
+  .kicker i { width: 12px; height: 12px; border-radius: 50%; background: #D4FF3A; box-shadow: 0 0 18px #D4FF3A; }
+  h1 { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: var(--big); letter-spacing: -.04em; line-height: .95; margin: 18px 0 10px; }
+  h1 b { color: #FF4D5E; }
+  .ar { font-size: calc(var(--big) * .34); color: #B9B5AB; direction: rtl; text-align: left; }
+  .tag { margin-top: 22px; font-size: 22px; color: #C9C5BB; max-width: 620px; line-height: 1.4; }
+  .chips { display: flex; gap: 10px; margin-top: 26px; }
+  .chip { font-family: "JetBrains Mono", monospace; font-size: 15px; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 8px 14px; background: rgba(7,8,10,.7); }
+  .chip b { color: #D4FF3A; font-weight: 500; }
+</style>
+</head>
+<body>
+  <div class="art"></div><div class="scrim"></div><div class="grain"></div>
+  <div class="content">
+    <div class="kicker"><i></i>AI VOICE-CLONE SCAM DETECTOR</div>
+    <h1>Real <b>or</b> Clone?</h1>
+    <div class="ar">حقيقي أم مستنسخ؟</div>
+    <div class="tag">Is that urgent voice note really them? Get a verdict in under a second — before you send any money.</div>
+    <div class="chips">
+      <span class="chip"><b>96.1%</b> accuracy on unseen voices</span>
+      <span class="chip"><b>2.4%</b> EER on unseen generators</span>
+      <span class="chip"><b>AR · FR · EN</b></span>
+    </div>
+  </div>
+</body>
+</html>
