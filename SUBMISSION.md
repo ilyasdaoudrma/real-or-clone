@@ -33,20 +33,33 @@ Three runs, all evaluated on the SAME held-out test set:
 - (b) (a) + our 1,619 Chatterbox clones
 - (c) (b) + varied real speech (VoxPopuli) + In-the-Wild training speakers
 
-| Test set | Run (a) | Run (b) | Run (c) |
+| Test set (never seen in training) | Run (a) | Run (b) | Run (c) |
 |---|---|---|---|
-| MLAAD generators never seen in training (incl. ElevenLabs, OpenAI, Gemini…) — EER | TODO | TODO | TODO |
-| In-the-Wild, held-out speakers — EER | TODO | TODO | TODO |
-| Our clones of held-out speakers — EER | TODO | TODO | TODO |
-| False alarms on real VoxPopuli speakers (never seen) | TODO | TODO | TODO |
-| Latency per 10 s of audio (L40S) | TODO | TODO | TODO |
+| MLAAD generators never seen (incl. ElevenLabs, OpenAI, Gemini, Cartesia…) — EER | **1.1%** | 1.5% | 2.4% |
+| Our Chatterbox clones of held-out speakers — EER | 21.8% | 5.9% | **5.2%** |
+| Our clones missed at threshold 0.5 | 37.7% | **1.9%** | 4.2% |
+| In-the-Wild, held-out speakers — EER | 30.6% | 26.4% | **3.4%** |
+| In-the-Wild REAL voices wrongly flagged | 95.4% | 95.8% | **6.8%** |
+| VoxPopuli REAL speakers wrongly flagged | 98.9% | 99.9% | **6.9%** |
+| FLEURS REAL speakers wrongly flagged | 8.8% | 17.4% | **7.9%** |
+| Latency per 10 s of audio (L40S) | 35 ms | 46 ms | **30 ms** |
+
+Test sizes: 1,323 FLEURS real, 695 VoxPopuli real, 3,956 MLAAD fake (held-out generators), 2,102 real + 1,736 fake
+In-the-Wild (held-out speakers), 310 of our clones. Full JSON (incl. per-generator detection) in `results/`.
+
+**Main results**
+- Adding our fresh Chatterbox clones (a → b) cut the error on voice clones **4×** (EER 21.8% → 5.9%; misses 37.7% → 1.9%).
+- Adding varied real voices (b → c) removed the shortcut: real voices wrongly flagged fell from ~96–99% to **~7%**,
+  In-the-Wild EER 26.4% → **3.4%**, at a small cost on MLAAD (1.5% → 2.4%).
+- **Caveat:** run (c) trains on other In-the-Wild speakers, so that test is speaker-disjoint but no longer a new domain.
+- Demo check with run (c): team lead's real phone voice note → likely real (p_fake 0.17); his 5 Chatterbox clones → likely clone (1.00).
 
 **Failure mode we found and fixed:** run (a) learned a shortcut — "sounds like FLEURS = real, anything else = fake".
 Spot check on unseen clips: FLEURS real 0/10 flagged, MLAAD fake 10/10 caught, but **In-the-Wild REAL 8/10 wrongly flagged**
-and the team lead's own real phone voice note scored 1.00 (fake). Run (c) adds varied real voices to remove the shortcut.
+and the team lead's own real phone voice note scored 1.00 (fake). Run (c) adds varied real voices and removes the shortcut (same note: 0.17 = real).
 
 ## Cost and speed
-GPU: 1× NVIDIA L40S 48 GB on Brev (Nebius), $2.14/h. Total GPU time: TODO h, cost: TODO $.
+GPU: 1× NVIDIA L40S 48 GB on Brev (Nebius), $2.14/h. Instance up since 12:01; ~3.7 h ≈ $8 at 15:40 (final figure at submission). Training: run (a) ~7 min, run (c) ~10 min.
 Clone generation ~39 clips/min (6 processes on one GPU). Training run (a): 2,169 steps in ~7 min.
 
 ## Models, agents, datasets, APIs, generated assets
