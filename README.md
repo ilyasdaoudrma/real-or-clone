@@ -8,6 +8,15 @@ The detector is trained and tested on English and French speech; the interface a
 
 GOMYCODE "Come Build with AI" hackathon, 27 Sept 2026. Team: Ilyas Daoud (lead), Oualid Karmoun, Ayoub El Mouhib.
 
+## Try it (jurors)
+1. Open https://real-or-clone-9m7lxdq0i.gobrev.dev and **sign in** (Google or email, Clerk development mode).
+2. **Upload** a voice note (WhatsApp ogg/opus, m4a, mp3, wav, 1-60 s) or **Record** one.
+3. Read the verdict, the suspicious seconds and the 3 tips; switch **ع / FR / EN**.
+4. Switch **Model** to "XLS-R 300M · before fine-tuning" and upload the same note to see what fine-tuning adds.
+5. **History**: replay or delete your checks. **Dashboard**: your stats + our held-out results.
+
+Demo video: https://real-or-clone-9m7lxdq0i.gobrev.dev/demo.mp4 · Slides: `docs/Real-or-Clone.pptx` · Results: `SUBMISSION.md`
+
 ## Layout
 | Folder | What |
 |---|---|
