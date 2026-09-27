@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Real or Clone?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f4f1ea; --card: #fffdf8; --ink: #1b1a17; --muted: #6b665c; --line: #e2dccf;
+    --real: #1f7a4d; --real-bg: #e3f2e9; --clone: #c2361f; --clone-bg: #fbe6e1;
+    --unsure: #a86a00; --unsure-bg: #fbf0d9;
+    --radius-lg: 22px; --radius-sm: 10px;
+    --font: "IBM Plex Sans Arabic", system-ui, sans-serif; --mono: "IBM Plex Mono", monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font); line-height: 1.5; }
+  main { max-width: 520px; margin: 0 auto; padding: 20px 16px 48px; }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .brand { font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em; }
+  .brand span { color: var(--clone); }
+  .langs { display: flex; gap: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+  .langs button { border: 0; background: none; font: 600 0.8rem var(--font); padding: 6px 11px; border-radius: 999px; cursor: pointer; color: var(--muted); }
+  .langs button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  h1 { font-size: clamp(1.9rem, 7vw, 2.5rem); line-height: 1.1; margin: 28px 0 8px; letter-spacing: -0.02em; }
+  .lede { color: var(--muted); margin: 0 0 24px; }
+  .input { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 22px; display: grid; gap: 14px; box-shadow: 0 1px 0 var(--line), 0 12px 30px -18px rgba(27,26,23,.25); }
+  .rec { display: flex; align-items: center; gap: 14px; width: 100%; border: 0; border-radius: 16px; padding: 16px; background: var(--ink); color: var(--paper); font: 600 1rem var(--font); cursor: pointer; transition: transform .15s ease; }
+  .rec:active { transform: scale(.98); }
+  .rec:focus-visible, .file:focus-within, .langs button:focus-visible { outline: 3px solid var(--unsure); outline-offset: 2px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--clone); flex: none; }
+  .rec.on .dot { animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity: .25; } }
+  .file { display: block; text-align: center; border: 1.5px dashed var(--line); border-radius: 16px; padding: 14px; cursor: pointer; color: var(--muted); font-weight: 600; }
+  .file input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .privacy { font-size: .8rem; color: var(--muted); margin: 0; }
+  .status { margin: 20px 4px 0; min-height: 1.5em; color: var(--muted); font-weight: 600; }
+  .result { margin-top: 18px; display: none; gap: 14px; }
+  .result.show { display: grid; animation: rise .35s ease; }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+  .verdict { border-radius: var(--radius-lg); padding: 22px; }
+  .verdict.likely_real { background: var(--real-bg); color: var(--real); }
+  .verdict.likely_clone { background: var(--clone-bg); color: var(--clone); }
+  .verdict.uncertain { background: var(--unsure-bg); color: var(--unsure); }
+  .verdict .label { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; opacity: .8; }
+  .verdict .big { font-size: 2rem; font-weight: 700; line-height: 1.15; margin: 4px 0 10px; color: var(--ink); }
+  .meter { height: 8px; background: rgba(27,26,23,.1); border-radius: 99px; overflow: hidden; }
+  .meter i { display: block; height: 100%; background: currentColor; border-radius: 99px; transition: width .6s ease; }
+  .meta { display: flex; justify-content: space-between; font: 500 .8rem var(--mono); margin-top: 8px; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 18px 20px; }
+  .panel h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 12px; }
+  .timeline { position: relative; height: 54px; display: flex; align-items: flex-end; gap: 3px; direction: ltr; }
+  .timeline b { flex: 1; border-radius: 6px 6px 2px 2px; min-height: 6px; }
+  .axis { display: flex; justify-content: space-between; font: 500 .72rem var(--mono); color: var(--muted); margin-top: 6px; direction: ltr; }
+  ol { margin: 0; padding-inline-start: 1.2em; display: grid; gap: 8px; }
+  .src { font: 500 .72rem var(--mono); color: var(--muted); margin-top: 10px; }
+  .err { color: var(--clone); }
+  footer { margin-top: 32px; font-size: .78rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="brand">Real <span>or</span> Clone?</div>
+    <nav class="langs" aria-label="Language">
+      <button data-lang="ar">ع</button><button data-lang="fr">FR</button><button data-lang="en" aria-pressed="true">EN</button>
+    </nav>
+  </header>
+
+  <h1 data-t="title"></h1>
+  <p class="lede" data-t="lede"></p>
+
+  <section class="input" aria-label="Voice note">
+    <button class="rec" id="rec"><span class="dot"></span><span id="recLabel" data-t="record"></span></button>
+    <label class="file"><input type="file" id="file" accept="audio/*,.ogg,.opus,.m4a,.mp3,.wav,.webm"><span data-t="upload"></span></label>
+    <p class="privacy" data-t="privacy"></p>
+  </section>
+
+  <p class="status" id="status" role="status" aria-live="polite"></p>
+
+  <section class="result" id="result">
+    <div class="verdict" id="verdict">
+      <div class="label" data-t="verdictLabel"></div>
+      <div class="big" id="verdictText"></div>
+      <div class="meter"><i id="meter"></i></div>
+      <div class="meta"><span id="conf"></span><span id="dur"></span></div>
+    </div>
+    <div class="panel">
+      <h2 data-t="timelineTitle"></h2>
+      <div class="timeline" id="timeline"></div>
+      <div class="axis"><span>0s</span><span id="axisEnd"></span></div>
+    </div>
+    <div class="panel">
+      <h2 data-t="tipsTitle"></h2>
+      <ol id="tips"></ol>
+      <div class="src" id="src"></div>
+    </div>
+  </section>
+
+  <footer data-t="footer"></footer>
+</main>
+<script>
+const T = {
+  en: { title: "Is this voice note really them?", lede: "Scammers clone a voice from 3 seconds of audio. Check a voice note before you send any money.",
+        record: "Record the voice note", stop: "Stop and analyse", upload: "or upload an audio file",
+        privacy: "Your audio is analysed and deleted immediately. Nothing is stored.",
+        analysing: "Analysing…", verdictLabel: "Verdict", likely_real: "Likely real", likely_clone: "Likely a clone", uncertain: "Can't tell for sure",
+        confidence: "confidence", timelineTitle: "Suspicious seconds", tipsTitle: "What to do now",
+        footer: "An AI can be wrong. Always confirm by calling back on a number you already know.",
+        errors: { too_short: "Too short: send at least 1 second.", too_long: "Too long: max 60 seconds.", bad_audio: "We couldn't read this audio file.", network: "The server is unreachable. Try again.", mic: "Microphone access was refused." },
+        tipsBy: { llm: "tips written by an AI from the verdict", template: "standard safety tips" } },
+  fr: { title: "Ce vocal, c'est vraiment lui ?", lede: "Les arnaqueurs clonent une voix avec 3 secondes d'audio. Vérifiez un message vocal avant d'envoyer de l'argent.",
+        record: "Enregistrer le vocal", stop: "Arrêter et analyser", upload: "ou importer un fichier audio",
+        privacy: "Votre audio est analysé puis supprimé immédiatement. Rien n'est conservé.",
+        analysing: "Analyse en cours…", verdictLabel: "Verdict", likely_real: "Probablement réel", likely_clone: "Probablement un clone", uncertain: "Impossible de trancher",
+        confidence: "confiance", timelineTitle: "Secondes suspectes", tipsTitle: "Que faire maintenant",
+        footer: "Une IA peut se tromper. Confirmez toujours en rappelant un numéro que vous connaissez déjà.",
+        errors: { too_short: "Trop court : au moins 1 seconde.", too_long: "Trop long : 60 secondes maximum.", bad_audio: "Impossible de lire ce fichier audio.", network: "Serveur injoignable. Réessayez.", mic: "Accès au micro refusé." },
+        tipsBy: { llm: "conseils rédigés par une IA à partir du verdict", template: "conseils de sécurité standards" } },
+  ar: { title: "هل هذه الرسالة الصوتية منه فعلًا؟", lede: "يستنسخ المحتالون الصوت من ثلاث ثوانٍ فقط. تحقّق من الرسالة الصوتية قبل أن ترسل أي مال.",
+        record: "سجّل الرسالة الصوتية", stop: "أوقف وحلّل", upload: "أو ارفع ملفًا صوتيًا",
+        privacy: "يُحلَّل الصوت ثم يُحذف فورًا. لا نحتفظ بأي شيء.",
+        analysing: "جارٍ التحليل…", verdictLabel: "النتيجة", likely_real: "على الأرجح حقيقي", likely_clone: "على الأرجح مستنسخ", uncertain: "لا يمكن الجزم",
+        confidence: "الثقة", timelineTitle: "الثواني المشبوهة", tipsTitle: "ماذا تفعل الآن",
+        footer: "قد يخطئ الذكاء الاصطناعي. تأكّد دائمًا بالاتصال على رقم تعرفه مسبقًا.",
+        errors: { too_short: "قصير جدًا: ثانية واحدة على الأقل.", too_long: "طويل جدًا: 60 ثانية كحد أقصى.", bad_audio: "تعذّرت قراءة الملف الصوتي.", network: "تعذّر الوصول إلى الخادم. حاول مجددًا.", mic: "تم رفض الوصول إلى الميكروفون." },
+        tipsBy: { llm: "نصائح كتبها ذكاء اصطناعي انطلاقًا من النتيجة", template: "نصائح أمان عامة" } },
+};
+const params = new URLSearchParams(location.search);
+const API = params.get("api") || "";            // same origin by default
+const MOCK = params.has("mock");
+let lang = "en", last = null, recorder = null, chunks = [];
+const $ = (id) => document.getElementById(id);
+
+function setLang(l) {
+  lang = l;
+  document.documentElement.lang = l;
+  document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
+  document.querySelectorAll("[data-t]").forEach((el) => { el.textContent = T[l][el.dataset.t]; });
+  document.querySelectorAll(".langs button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.lang === l));
+  $("recLabel").textContent = recorder ? T[l].stop : T[l].record;
+  if (last) render(last);
+}
+
+function colorFor(p) { return p >= 0.65 ? "var(--clone)" : p <= 0.35 ? "var(--real)" : "var(--unsure)"; }
+
+function render(r) {
+  last = r;
+  $("verdict").className = "verdict " + r.verdict;
+  $("verdictText").textContent = T[lang][r.verdict];
+  $("meter").style.width = Math.round(r.p_fake * 100) + "%";
+  $("conf").textContent = `${T[lang].confidence} ${Math.round(r.confidence * 100)}%`;
+  $("dur").textContent = `${r.duration.toFixed(1)}s · ${r.latency_ms} ms`;
+  const tl = $("timeline");
+  tl.replaceChildren(...r.windows.map((w) => {
+    const b = document.createElement("b");
+    b.style.height = Math.max(8, w.p_fake * 100) + "%";
+    b.style.background = colorFor(w.p_fake);
+    b.title = `${w.start}s–${w.end}s: ${Math.round(w.p_fake * 100)}%`;
+    return b;
+  }));
+  $("axisEnd").textContent = r.duration.toFixed(1) + "s";
+  $("tips").replaceChildren(...r.tips.map((t) => { const li = document.createElement("li"); li.textContent = t; return li; }));
+  $("src").textContent = T[lang].tipsBy[r.tips_source] || "";
+  $("result").classList.add("show");
+}
+
+function status(msg, isErr = false) { $("status").textContent = msg; $("status").classList.toggle("err", isErr); }
+
+async function analyse(blob, name) {
+  status(T[lang].analysing);
+  $("result").classList.remove("show");
+  try {
+    let r;
+    if (MOCK) {
+      r = await (await fetch("mock_response.json")).json();
+    } else {
+      const fd = new FormData();
+      fd.append("file", blob, name);
+      fd.append("lang", lang);
+      const res = await fetch(API + "/analyze", { method: "POST", body: fd });
+      r = await res.json();
+      if (!res.ok) { status(T[lang].errors[r.error] || T[lang].errors.network, true); return; }
+    }
+    status("");
+    render(r);
+  } catch { status(T[lang].errors.network, true); }
+}
+
+$("rec").addEventListener("click", async () => {
+  if (recorder) { recorder.stop(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    recorder = new MediaRecorder(stream);
+    chunks = [];
+    recorder.ondataavailable = (e) => chunks.push(e.data);
+    recorder.onstop = () => {
+      stream.getTracks().forEach((t) => t.stop());
+      const type = recorder.mimeType || "audio/webm";
+      recorder = null;
+      $("rec").classList.remove("on");
+      $("recLabel").textContent = T[lang].record;
+      analyse(new Blob(chunks, { type }), type.includes("mp4") ? "note.m4a" : "note.webm");
+    };
+    recorder.start();
+    $("rec").classList.add("on");
+    $("recLabel").textContent = T[lang].stop;
+  } catch { status(T[lang].errors.mic, true); }
+});
+$("file").addEventListener("change", (e) => { const f = e.target.files[0]; if (f) analyse(f, f.name); e.target.value = ""; });
+document.querySelectorAll(".langs button").forEach((b) => b.addEventListener("click", () => setLang(b.dataset.lang)));
+setLang("en");
+</script>
+</body>
+</html>
