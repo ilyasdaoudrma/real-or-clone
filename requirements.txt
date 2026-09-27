@@ -1,4 +1,4 @@
-# Brev image already ships torch + CUDA. Install the rest:
+# No-op if torch is already installed on the box.
 huggingface_hub>=0.30
 python-dotenv
 tqdm
@@ -6,8 +6,10 @@ soundfile
 pandas
 scikit-learn
 transformers>=4.44
+torch
 torchaudio
 fastapi
 uvicorn[standard]
 python-multipart
 openai
+python-dotenv
