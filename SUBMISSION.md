@@ -54,6 +54,20 @@ In-the-Wild (held-out speakers), 310 of our clones. Full JSON (incl. per-generat
 - **Caveat:** run (c) trains on other In-the-Wild speakers, so that test is speaker-disjoint but no longer a new domain.
 - Demo check with run (c): team lead's real phone voice note → likely real (p_fake 0.17); his 5 Chatterbox clones → likely clone (1.00).
 
+
+**Overall, all held-out test clips pooled (threshold 0.5)** — figures in `docs/figures/`
+(`eer_by_run.png`, `false_alarms_by_run.png`, `confusion_matrices.png`; script `docs/make_figures.py`):
+
+Real test clips: 4,120 · clone test clips: 6,002
+
+| Run | Accuracy | Precision (clone) | Recall (clone) | F1 | False alarms on real | TN / FP / FN / TP |
+|---|---|---|---|---|---|---|
+| Run A — public data | 70.8% | 67.6% | 97.5% | 0.798 | 68.2% | 1,311 / 2,809 / 149 / 5,853 |
+| Run B — + our clones | 70.8% | 67.1% | 99.8% | 0.802 | 71.3% | 1,182 / 2,938 / 13 / 5,989 |
+| Run C — + varied real voices | 96.1% | 95.2% | 98.4% | 0.968 | 7.2% | 3,825 / 295 / 98 / 5,904 |
+
+The live app lets the user pick run A, B or C, to compare the baseline and our improved models on the same voice note.
+
 **Failure mode we found and fixed:** run (a) learned a shortcut — "sounds like FLEURS = real, anything else = fake".
 Spot check on unseen clips: FLEURS real 0/10 flagged, MLAAD fake 10/10 caught, but **In-the-Wild REAL 8/10 wrongly flagged**
 and the team lead's own real phone voice note scored 1.00 (fake). Run (c) adds varied real voices and removes the shortcut (same note: 0.17 = real).

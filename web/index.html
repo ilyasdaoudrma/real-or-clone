@@ -35,6 +35,11 @@
   .file { display: block; text-align: center; border: 1.5px dashed var(--line); border-radius: 16px; padding: 14px; cursor: pointer; color: var(--muted); font-weight: 600; }
   .file input { position: absolute; opacity: 0; width: 1px; height: 1px; }
   .privacy { font-size: .8rem; color: var(--muted); margin: 0; }
+  .models { display: grid; gap: 6px; }
+  .models span { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .models div { display: flex; flex-wrap: wrap; gap: 6px; }
+  .models button { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 6px 12px; font: 600 .78rem var(--font); cursor: pointer; color: var(--ink); }
+  .models button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
   .status { margin: 20px 4px 0; min-height: 1.5em; color: var(--muted); font-weight: 600; }
   .result { margin-top: 18px; display: none; gap: 14px; }
   .result.show { display: grid; animation: rise .35s ease; }
@@ -74,6 +79,7 @@
   <section class="input" aria-label="Voice note">
     <button class="rec" id="rec"><span class="dot"></span><span id="recLabel" data-t="record"></span></button>
     <label class="file"><input type="file" id="file" accept="audio/*,.ogg,.opus,.m4a,.mp3,.wav,.webm"><span data-t="upload"></span></label>
+    <div class="models" id="models" hidden><span data-t="modelLabel"></span><div id="modelBtns"></div></div>
     <p class="privacy" data-t="privacy"></p>
   </section>
 
@@ -106,7 +112,7 @@ const T = {
         record: "Record the voice note", stop: "Stop and analyse", upload: "or upload an audio file",
         privacy: "Your audio is analysed and deleted immediately. Nothing is stored.",
         analysing: "Analysing…", verdictLabel: "Verdict", likely_real: "Likely real", likely_clone: "Likely a clone", uncertain: "Can't tell for sure",
-        confidence: "confidence", timelineTitle: "Suspicious seconds", tipsTitle: "What to do now",
+        modelLabel: "Model", confidence: "confidence", timelineTitle: "Suspicious seconds", tipsTitle: "What to do now",
         footer: "An AI can be wrong. Always confirm by calling back on a number you already know.",
         errors: { too_short: "Too short: send at least 1 second.", too_long: "Too long: max 60 seconds.", bad_audio: "We couldn't read this audio file.", network: "The server is unreachable. Try again.", mic: "Microphone access was refused." },
         tipsBy: { llm: "tips written by an AI from the verdict", template: "standard safety tips" } },
@@ -114,7 +120,7 @@ const T = {
         record: "Enregistrer le vocal", stop: "Arrêter et analyser", upload: "ou importer un fichier audio",
         privacy: "Votre audio est analysé puis supprimé immédiatement. Rien n'est conservé.",
         analysing: "Analyse en cours…", verdictLabel: "Verdict", likely_real: "Probablement réel", likely_clone: "Probablement un clone", uncertain: "Impossible de trancher",
-        confidence: "confiance", timelineTitle: "Secondes suspectes", tipsTitle: "Que faire maintenant",
+        modelLabel: "Modèle", confidence: "confiance", timelineTitle: "Secondes suspectes", tipsTitle: "Que faire maintenant",
         footer: "Une IA peut se tromper. Confirmez toujours en rappelant un numéro que vous connaissez déjà.",
         errors: { too_short: "Trop court : au moins 1 seconde.", too_long: "Trop long : 60 secondes maximum.", bad_audio: "Impossible de lire ce fichier audio.", network: "Serveur injoignable. Réessayez.", mic: "Accès au micro refusé." },
         tipsBy: { llm: "conseils rédigés par une IA à partir du verdict", template: "conseils de sécurité standards" } },
@@ -122,7 +128,7 @@ const T = {
         record: "سجّل الرسالة الصوتية", stop: "أوقف وحلّل", upload: "أو ارفع ملفًا صوتيًا",
         privacy: "يُحلَّل الصوت ثم يُحذف فورًا. لا نحتفظ بأي شيء.",
         analysing: "جارٍ التحليل…", verdictLabel: "النتيجة", likely_real: "على الأرجح حقيقي", likely_clone: "على الأرجح مستنسخ", uncertain: "لا يمكن الجزم",
-        confidence: "الثقة", timelineTitle: "الثواني المشبوهة", tipsTitle: "ماذا تفعل الآن",
+        modelLabel: "النموذج", confidence: "الثقة", timelineTitle: "الثواني المشبوهة", tipsTitle: "ماذا تفعل الآن",
         footer: "قد يخطئ الذكاء الاصطناعي. تأكّد دائمًا بالاتصال على رقم تعرفه مسبقًا.",
         errors: { too_short: "قصير جدًا: ثانية واحدة على الأقل.", too_long: "طويل جدًا: 60 ثانية كحد أقصى.", bad_audio: "تعذّرت قراءة الملف الصوتي.", network: "تعذّر الوصول إلى الخادم. حاول مجددًا.", mic: "تم رفض الوصول إلى الميكروفون." },
         tipsBy: { llm: "نصائح كتبها ذكاء اصطناعي انطلاقًا من النتيجة", template: "نصائح أمان عامة" } },
@@ -130,7 +136,7 @@ const T = {
 const params = new URLSearchParams(location.search);
 const API = params.get("api") || "";            // same origin by default
 const MOCK = params.has("mock");
-let lang = "en", last = null, recorder = null, chunks = [];
+let lang = "en", last = null, recorder = null, chunks = [], model = "";
 const $ = (id) => document.getElementById(id);
 
 function setLang(l) {
@@ -151,7 +157,7 @@ function render(r) {
   $("verdictText").textContent = T[lang][r.verdict];
   $("meter").style.width = Math.round(r.p_fake * 100) + "%";
   $("conf").textContent = `${T[lang].confidence} ${Math.round(r.confidence * 100)}%`;
-  $("dur").textContent = `${r.duration.toFixed(1)}s · ${r.latency_ms} ms`;
+  $("dur").textContent = `${r.duration.toFixed(1)}s · ${r.latency_ms} ms · ${r.model}`;
   const tl = $("timeline");
   tl.replaceChildren(...r.windows.map((w) => {
     const b = document.createElement("b");
@@ -179,6 +185,7 @@ async function analyse(blob, name) {
       const fd = new FormData();
       fd.append("file", blob, name);
       fd.append("lang", lang);
+      if (model) fd.append("model", model);
       const res = await fetch(API + "/analyze", { method: "POST", body: fd });
       r = await res.json();
       if (!res.ok) { status(T[lang].errors[r.error] || T[lang].errors.network, true); return; }
@@ -211,6 +218,22 @@ $("rec").addEventListener("click", async () => {
 $("file").addEventListener("change", (e) => { const f = e.target.files[0]; if (f) analyse(f, f.name); e.target.value = ""; });
 document.querySelectorAll(".langs button").forEach((b) => b.addEventListener("click", () => setLang(b.dataset.lang)));
 setLang("en");
+// Model picker: compare the baseline (run A) with our improved runs on the same voice note.
+fetch(API + "/health").then((r) => r.json()).then((h) => {
+  if (!h.models || Object.keys(h.models).length < 2) return;
+  model = h.model;
+  $("modelBtns").replaceChildren(...Object.entries(h.models).map(([id, label]) => {
+    const b = document.createElement("button");
+    b.textContent = label;
+    b.setAttribute("aria-pressed", id === model);
+    b.addEventListener("click", () => {
+      model = id;
+      document.querySelectorAll("#modelBtns button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+    });
+    return b;
+  }));
+  $("models").hidden = false;
+}).catch(() => {});
 </script>
 </body>
 </html>

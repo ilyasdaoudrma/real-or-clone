@@ -24,7 +24,9 @@ from augment.voicenote import SR, load
 from train.detector import Detector
 
 load_dotenv()
-CKPT = os.environ.get("CKPT", "checkpoints/run_b")
+CKPT = os.environ.get("CKPT", "checkpoints/run_c")          # default model
+# every run that exists is loaded, so the app can compare "before" (a) and "after" (b, c)
+RUN_LABELS = {"run_a": "A: public data", "run_b": "B: + our clones", "run_c": "C: + varied real voices"}
 MAX_BYTES = 10 * 1024 * 1024
 MIN_S, MAX_S = 1.0, 60.0
 CLONE_AT, REAL_AT = 0.65, 0.35          # between the two -> "uncertain"
@@ -46,7 +48,9 @@ LANG_NAME = {"en": "English", "fr": "French", "ar": "Modern Standard Arabic"}
 
 app = FastAPI(title="Real or Clone?")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"], allow_headers=["*"])
-detector = Detector(CKPT)
+detectors = {name: Detector(str(Path(CKPT).parent / name)) for name in RUN_LABELS
+             if (Path(CKPT).parent / name / "config.json").exists()}
+DEFAULT = Path(CKPT).name
 LLM_MODEL = os.environ.get("LLM_MODEL", "openai/gpt-oss-120b")
 llm = OpenAI(base_url=os.environ.get("LLM_BASE_URL", "https://api.groq.com/openai/v1"),
              api_key=os.environ["LLM_API_KEY"], timeout=8.0) if os.environ.get("LLM_API_KEY") else None
@@ -94,14 +98,17 @@ def rate_limited(ip: str) -> bool:
 
 @app.get("/health")
 def health() -> dict:
-    return {"ok": True, "model": Path(CKPT).name, "device": detector.device, "tips": LLM_MODEL if llm else "template"}
+    return {"ok": True, "model": DEFAULT, "models": {k: RUN_LABELS[k] for k in detectors},
+            "device": detectors[DEFAULT].device, "tips": LLM_MODEL if llm else "template"}
 
 
 @app.post("/analyze")
-async def analyze(request: Request, file: UploadFile = File(...), lang: str = Form("en")):
+async def analyze(request: Request, file: UploadFile = File(...), lang: str = Form("en"),
+                  model: str = Form("")):
     if rate_limited(request.client.host if request.client else "?"):
         raise HTTPException(429, "too_many_requests")
     lang = lang if lang in LANGS else "en"
+    model = model if model in detectors else DEFAULT
     data = await file.read(MAX_BYTES + 1)
     if len(data) > MAX_BYTES:
         return JSONResponse({"error": "too_long"}, status_code=400)
@@ -121,13 +128,13 @@ async def analyze(request: Request, file: UploadFile = File(...), lang: str = Fo
         return JSONResponse({"error": "too_short"}, status_code=400)
     if dur > MAX_S:
         return JSONResponse({"error": "too_long"}, status_code=400)
-    res = detector.score_array(x)
+    res = detectors[model].score_array(x)
     p = res["p_fake"]
     core = {"verdict": verdict_of(p), "p_fake": round(p, 4), "confidence": round(abs(p - 0.5) * 2, 4),
             "duration": res["duration"], "windows": res["windows"]}
     tips, source = write_tips({k: core[k] for k in ("verdict", "p_fake", "confidence")}, lang)
     return {**core, "tips": tips, "tips_source": source,
-            "latency_ms": round((time.perf_counter() - t0) * 1000), "model": Path(CKPT).name}
+            "latency_ms": round((time.perf_counter() - t0) * 1000), "model": model}
 
 
 web_dir = Path(__file__).resolve().parent.parent / "web"
