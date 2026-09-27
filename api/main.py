@@ -68,20 +68,30 @@ def verdict_of(p_fake: float) -> str:
     return "uncertain"
 
 
+GUIDANCE = {
+    "likely_clone": "The voice is most likely AI-cloned. Give urgent, concrete protective actions "
+                    "(do not pay or reply, hang up, contact the real person another way, warn family, report it).",
+    "likely_real": "The voice is most likely real, but detectors can be wrong and real people can be coerced. "
+                   "Reassure calmly while still suggesting one light verification before sending any money.",
+    "uncertain": "The detector cannot decide. Explain simply how the listener can verify the caller themselves "
+                 "(personal questions, call-back, a trusted third person) before acting.",
+}
+
+
 def write_tips(verdict: dict, lang: str) -> tuple[list[str], str]:
     """3 tips from the LLM, or fixed templates if the LLM is missing, slow or malformed."""
     if llm is None:
         return TEMPLATES[lang], "template"
-    prompt = (f"A voice-clone detector analysed a voice note. Its result (final, do not question it):\n"
-              f"{json.dumps(verdict)}\n"
-              f"Write exactly 3 short, concrete safety tips in {LANG_NAME[lang]} for the person who received "
-              f"this voice note, suited to this verdict (e.g. call back on a known number, family code word, "
-              f"never send money on a voice note alone). Do not state a different verdict or probability. "
-              f'Answer ONLY with JSON: {{"tips": ["...", "...", "..."]}}')
+    prompt = (f"A voice-clone detector analysed a voice note. Its result is final; never contradict it or "
+              f"state another verdict or probability:\n{json.dumps(verdict)}\n"
+              f"Situation: {GUIDANCE[verdict['verdict']]}\n"
+              f"Write exactly 3 short, concrete, varied tips (max 25 words each) in {LANG_NAME[lang]} for the person "
+              f"who received this voice note, written for a non-technical family member. If useful, mention the "
+              f"most suspicious seconds. Answer ONLY with JSON: {{\"tips\": [\"...\", \"...\", \"...\"]}}")
     try:
         extra = {"reasoning_effort": "low"} if "gpt-oss" in LLM_MODEL else {}
         res = llm.chat.completions.create(model=LLM_MODEL, messages=[{"role": "user", "content": prompt}],
-                                          temperature=0.3, max_tokens=800, extra_body=extra)
+                                          temperature=0.9, max_tokens=800, extra_body=extra)
         text = res.choices[0].message.content
         tips = json.loads(text[text.index("{"):text.rindex("}") + 1])["tips"]
         if isinstance(tips, list) and len(tips) == 3 and all(isinstance(t, str) and t.strip() for t in tips):
@@ -135,7 +145,11 @@ async def analyze(request: Request, file: UploadFile = File(...), lang: str = Fo
     p = res["p_fake"]
     core = {"verdict": verdict_of(p), "p_fake": round(p, 4), "confidence": round(abs(p - 0.5) * 2, 4),
             "duration": res["duration"], "windows": res["windows"]}
-    tips, source = write_tips({k: core[k] for k in ("verdict", "p_fake", "confidence")}, lang)
+    worst = max(res["windows"], key=lambda w: w["p_fake"])
+    facts = {"verdict": core["verdict"], "confidence": core["confidence"], "duration_s": core["duration"]}
+    if core["verdict"] != "likely_real":  # pointing at "suspicious seconds" of a real voice would confuse
+        facts["most_suspicious_seconds"] = f"{worst['start']:.0f}-{worst['end']:.0f}"
+    tips, source = write_tips(facts, lang)
     return {**core, "tips": tips, "tips_source": source,
             "latency_ms": round((time.perf_counter() - t0) * 1000),
             "model": model, "model_label": MODEL_LABELS[model]}
