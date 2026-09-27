@@ -172,7 +172,7 @@
       <div class="proof">
         <span class="pill"><b>96%</b> <span data-t="p1"></span></span>
         <span class="pill"><b>&lt;1 s</b> <span data-t="p2"></span></span>
-        <span class="pill"><b>0</b> <span data-t="p3"></span></span>
+        <span class="pill"><b>AR · FR · EN</b> <span data-t="p3"></span></span>
       </div>
     </div>
 
@@ -270,7 +270,7 @@
 <script>
 const T = {
   en: { kicker: "AI voice-clone detector", title: "Is this voice note <em>really</em> them?", lede: "Scammers clone a voice from 3 seconds of audio. Check a voice note before you send any money.",
-        p1: "accuracy on unseen voices", p2: "per voice note", p3: "audio stored",
+        p1: "accuracy on unseen voices", p2: "per voice note", p3: "safety tips",
         upload: "Upload", record: "Record", drop: "Drop a voice note or tap to choose", recStart: "Start recording", recStop: "Stop and analyse",
         modelLabel: "Model", privacy: "Your audio is analysed and deleted immediately. Nothing is stored.",
         stages: ["Sending audio", "Voice-note preprocessing", "Model inference", "Writing safety tips"],
@@ -280,7 +280,7 @@ const T = {
         errors: { too_short: "Too short: send at least 1 second.", too_long: "Too long: max 60 seconds.", bad_audio: "We couldn't read this audio file.", too_many_requests: "Too many requests, wait a minute.", network: "The server is unreachable. Try again.", mic: "Microphone access was refused." },
         tipsBy: { llm: "tips written by an AI from the verdict only", template: "standard safety tips" } },
   fr: { kicker: "Détecteur de clonage vocal", title: "Ce vocal, c'est <em>vraiment</em> lui ?", lede: "Les arnaqueurs clonent une voix avec 3 secondes d'audio. Vérifiez un message vocal avant d'envoyer de l'argent.",
-        p1: "de précision sur des voix inconnues", p2: "par vocal", p3: "audio conservé",
+        p1: "de précision sur des voix inconnues", p2: "par vocal", p3: "conseils de sécurité",
         upload: "Importer", record: "Enregistrer", drop: "Déposez un vocal ou touchez pour choisir", recStart: "Commencer l'enregistrement", recStop: "Arrêter et analyser",
         modelLabel: "Modèle", privacy: "Votre audio est analysé puis supprimé immédiatement. Rien n'est conservé.",
         stages: ["Envoi de l'audio", "Prétraitement vocal", "Inférence du modèle", "Rédaction des conseils"],
@@ -290,7 +290,7 @@ const T = {
         errors: { too_short: "Trop court : au moins 1 seconde.", too_long: "Trop long : 60 secondes maximum.", bad_audio: "Impossible de lire ce fichier audio.", too_many_requests: "Trop de requêtes, patientez une minute.", network: "Serveur injoignable. Réessayez.", mic: "Accès au micro refusé." },
         tipsBy: { llm: "conseils rédigés par une IA à partir du verdict seul", template: "conseils de sécurité standards" } },
   ar: { kicker: "كاشف استنساخ الصوت", title: "هل هذه الرسالة الصوتية <em>منه</em> فعلًا؟", lede: "يستنسخ المحتالون الصوت من ثلاث ثوانٍ فقط. تحقّق من الرسالة الصوتية قبل أن ترسل أي مال.",
-        p1: "دقة على أصوات جديدة", p2: "لكل رسالة", p3: "صوت محفوظ",
+        p1: "دقة على أصوات جديدة", p2: "لكل رسالة", p3: "نصائح أمان",
         upload: "رفع ملف", record: "تسجيل", drop: "أسقط رسالة صوتية هنا أو اضغط للاختيار", recStart: "ابدأ التسجيل", recStop: "أوقف وحلّل",
         modelLabel: "النموذج", privacy: "يُحلَّل الصوت ثم يُحذف فورًا. لا نحتفظ بأي شيء.",
         stages: ["إرسال الصوت", "تهيئة الصوت", "تشغيل النموذج", "كتابة النصائح"],
