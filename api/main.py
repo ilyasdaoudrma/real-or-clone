@@ -16,7 +16,6 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from openai import OpenAI
@@ -33,6 +32,7 @@ BASE_MODEL = "facebook/wav2vec2-xls-r-300m"
 # reproducible) with our fine-tuned model AFTER, on the same voice note.
 MODEL_LABELS = {"base": "XLS-R 300M · before fine-tuning", "ours": "Fine-tuned · ours"}
 MAX_BYTES = 10 * 1024 * 1024
+MAX_BODY = MAX_BYTES + 256 * 1024       # multipart overhead
 MIN_S, MAX_S = 1.0, 60.0
 CLONE_AT, REAL_AT = 0.65, 0.35          # between the two -> "uncertain"
 RATE_LIMIT, RATE_WINDOW_S = 20, 60      # requests per IP per window
@@ -52,7 +52,6 @@ TEMPLATES = {
 LANG_NAME = {"en": "English", "fr": "French", "ar": "Modern Standard Arabic"}
 
 app = FastAPI(title="Real or Clone?")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"], allow_headers=["*"])
 torch.manual_seed(0)
 detectors = {"base": Detector(BASE_MODEL), "ours": Detector(CKPT)}
 DEFAULT = "ours"
@@ -105,12 +104,68 @@ def write_tips(verdict: dict, lang: str) -> tuple[list[str], str]:
     return TEMPLATES[lang], "template"
 
 
-def rate_limited(ip: str) -> bool:
-    now, q = time.time(), hits[ip]
+def rate_limited(key: str) -> bool:
+    now, q = time.time(), hits[key]
     while q and now - q[0] > RATE_WINDOW_S:
         q.popleft()
     q.append(now)
     return len(q) > RATE_LIMIT
+
+
+class GuardAnalyze:
+    """Checks login and size BEFORE the multipart body is parsed (Starlette spools uploads to disk
+    with no size limit), so anonymous or oversized requests never reach the disk."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http" or scope["path"] != "/analyze" or scope["method"] != "POST":
+            await self.app(scope, receive, send)
+            return
+        request = Request(scope)
+        try:
+            uid = auth.user_id(request)
+        except HTTPException:
+            uid = None
+        if auth.PUBLISHABLE_KEY and uid is None:
+            await JSONResponse({"detail": "login_required"}, status_code=401)(scope, receive, send)
+            return
+        length = request.headers.get("content-length")
+        if length is not None and (not length.isdigit() or int(length) > MAX_BODY):
+            await JSONResponse({"error": "too_long"}, status_code=413)(scope, receive, send)
+            return
+        received = 0
+
+        async def limited_receive():
+            nonlocal received
+            message = await receive()
+            if message["type"] == "http.request":
+                received += len(message.get("body", b""))
+                if received > MAX_BODY:  # chunked bodies without Content-Length
+                    raise HTTPException(413, "too_long")
+            return message
+
+        await self.app(scope, limited_receive, send)
+
+
+class SecurityHeaders:
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        async def send_with_headers(message):
+            if message["type"] == "http.response.start":
+                message.setdefault("headers", [])
+                message["headers"] += [(b"x-content-type-options", b"nosniff"), (b"x-frame-options", b"DENY"),
+                                       (b"referrer-policy", b"strict-origin-when-cross-origin"),
+                                       (b"permissions-policy", b"camera=(), geolocation=(), microphone=(self)")]
+            await send(message)
+        await self.app(scope, receive, send_with_headers if scope["type"] == "http" else send)
+
+
+app.add_middleware(GuardAnalyze)
+app.add_middleware(SecurityHeaders)
 
 
 store.init()
@@ -155,17 +210,18 @@ def health() -> dict:
 @app.post("/analyze")
 async def analyze(request: Request, file: UploadFile = File(...), lang: str = Form("en"),
                   model: str = Form("")):
-    if rate_limited(request.client.host if request.client else "?"):
+    # Login required when Clerk is configured: every check belongs to a user and goes to their history.
+    uid = auth.require_user(request) if auth.PUBLISHABLE_KEY else auth.user_id(request)
+    # Per-user limit: behind the Brev proxy every client shares one IP, so an IP key let anyone lock out everyone.
+    if rate_limited(uid or (request.client.host if request.client else "?")):
         raise HTTPException(429, "too_many_requests")
     lang = lang if lang in LANGS else "en"
     model = model if model in detectors else DEFAULT
-    # Login required when Clerk is configured: every check belongs to a user and goes to their history.
-    uid = auth.require_user(request) if auth.PUBLISHABLE_KEY else auth.user_id(request)
     data = await file.read(MAX_BYTES + 1)
     if len(data) > MAX_BYTES:
         return JSONResponse({"error": "too_long"}, status_code=400)
     t0 = time.perf_counter()
-    fd, tmp_path = tempfile.mkstemp(suffix=Path(file.filename or "a").suffix[:8])
+    fd, tmp_path = tempfile.mkstemp(suffix=".upload")
     try:
         with os.fdopen(fd, "wb") as tmp:
             tmp.write(data)

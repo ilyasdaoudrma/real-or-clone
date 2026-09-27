@@ -328,8 +328,8 @@ for (const [l, extra] of Object.entries({"en": {"navCheck": "Check", "navHistory
 for (const [l, extra] of Object.entries({"en": {"gateTitle": "Sign in to check a voice note", "gateText": "Each check is saved with its audio in your private history. You can delete it anytime.", "privacy": "Your voice notes and results are saved in your private history. Only you can see them, and you can delete them anytime.", "login_required": "Please sign in first."}, "fr": {"gateTitle": "Connectez-vous pour vérifier un vocal", "gateText": "Chaque vérification est enregistrée avec son audio dans votre historique privé. Vous pouvez la supprimer à tout moment.", "privacy": "Vos vocaux et leurs résultats sont enregistrés dans votre historique privé. Vous seul les voyez, et vous pouvez les supprimer à tout moment.", "login_required": "Connectez-vous d'abord."}, "ar": {"gateTitle": "سجّل الدخول لفحص رسالة صوتية", "gateText": "يُحفظ كل فحص مع صوته في سجلك الخاص، ويمكنك حذفه في أي وقت.", "privacy": "تُحفظ رسائلك الصوتية ونتائجها في سجلك الخاص. أنت وحدك تراها، ويمكنك حذفها في أي وقت.", "login_required": "يرجى تسجيل الدخول أولًا."}})) { Object.assign(T[l], extra); T[l].errors.login_required = extra.login_required; }
 const ICON = { likely_real: "✓", likely_clone: "!", uncertain: "?" };
 const params = new URLSearchParams(location.search);
-const API = params.get("api") || "";            // same origin by default
-const MOCK = params.has("mock");
+const API = "";                                  // always same-origin: never let a link redirect uploads or tokens
+const MOCK = params.has("mock") && ["localhost", "127.0.0.1"].includes(location.hostname); // dev only
 let lang = "en", last = null, recorder = null, chunks = [], model = "", recStart = 0, recTimer = null, stageTimer = null;
 const $ = (id) => document.getElementById(id);
 

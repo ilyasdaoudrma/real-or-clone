@@ -34,7 +34,8 @@ CONDITIONS = ("clean", "opus", "phone", "noise", "reverb")
 
 def _ffmpeg(args: list[str], data: bytes | None = None) -> bytes:
     # stdin must never be the terminal: a backgrounded ffmpeg that reads the tty gets stopped (hangs forever)
-    res = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-threads", "1", *args],
+    res = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-threads", "1",
+                          "-protocol_whitelist", "file,pipe", *args],
                          input=data if data is not None else b"", capture_output=True, check=True)
     return res.stdout
 
