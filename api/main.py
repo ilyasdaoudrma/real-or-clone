@@ -7,22 +7,23 @@ the verdict comes from the detector alone and is never sent back through the LLM
 Login (Clerk) is required to analyse. Each check saves the audio + result to that user's private,
 deletable history (SQLite + files, see api/store.py).
 """
+import asyncio
 import json
 import os
 import tempfile
 import time
-from collections import defaultdict, deque
 from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import run_in_threadpool
 from openai import OpenAI
 import torch
 
 from augment.voicenote import SR, load
-from api import auth, store
+from api import auth, limits, store
 from train.detector import Detector
 
 load_dotenv()
@@ -35,7 +36,9 @@ MAX_BYTES = 10 * 1024 * 1024
 MAX_BODY = MAX_BYTES + 256 * 1024       # multipart overhead
 MIN_S, MAX_S = 1.0, 60.0
 CLONE_AT, REAL_AT = 0.65, 0.35          # between the two -> "uncertain"
-RATE_LIMIT, RATE_WINDOW_S = 20, 60      # requests per IP per window
+HEAVY_SLOTS = 2                         # analyses running at once; the rest queue
+QUEUE_WAIT_S = 30
+_heavy = asyncio.Semaphore(HEAVY_SLOTS)
 LANGS = ("ar", "fr", "en")
 
 TEMPLATES = {
@@ -58,7 +61,6 @@ DEFAULT = "ours"
 LLM_MODEL = os.environ.get("LLM_MODEL", "openai/gpt-oss-120b")
 llm = OpenAI(base_url=os.environ.get("LLM_BASE_URL", "https://api.groq.com/openai/v1"),
              api_key=os.environ["LLM_API_KEY"], timeout=8.0) if os.environ.get("LLM_API_KEY") else None
-hits: dict[str, deque] = defaultdict(deque)
 
 
 def verdict_of(p_fake: float) -> str:
@@ -104,14 +106,6 @@ def write_tips(verdict: dict, lang: str) -> tuple[list[str], str]:
     return TEMPLATES[lang], "template"
 
 
-def rate_limited(key: str) -> bool:
-    now, q = time.time(), hits[key]
-    while q and now - q[0] > RATE_WINDOW_S:
-        q.popleft()
-    q.append(now)
-    return len(q) > RATE_LIMIT
-
-
 class GuardAnalyze:
     """Checks login and size BEFORE the multipart body is parsed (Starlette spools uploads to disk
     with no size limit), so anonymous or oversized requests never reach the disk."""
@@ -149,6 +143,21 @@ class GuardAnalyze:
         await self.app(scope, limited_receive, send)
 
 
+FAPI = auth.frontend_api()
+CSP = "; ".join([
+    "default-src 'self'",
+    f"script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://{FAPI} https://challenges.cloudflare.com",
+    f"connect-src 'self' https://{FAPI} https://clerk-telemetry.com https://cdn.jsdelivr.net",
+    "img-src 'self' data: blob: https://img.clerk.com",
+    "media-src 'self' blob:",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "frame-src https://challenges.cloudflare.com",
+    "worker-src 'self' blob:",
+    "frame-ancestors 'none'", "base-uri 'self'", "form-action 'self'", "object-src 'none'",
+]).encode()
+
+
 class SecurityHeaders:
     def __init__(self, app):
         self.app = app
@@ -159,7 +168,8 @@ class SecurityHeaders:
                 message.setdefault("headers", [])
                 message["headers"] += [(b"x-content-type-options", b"nosniff"), (b"x-frame-options", b"DENY"),
                                        (b"referrer-policy", b"strict-origin-when-cross-origin"),
-                                       (b"permissions-policy", b"camera=(), geolocation=(), microphone=(self)")]
+                                       (b"permissions-policy", b"camera=(), geolocation=(), microphone=(self)"),
+                                       (b"content-security-policy", CSP)]
             await send(message)
         await self.app(scope, receive, send_with_headers if scope["type"] == "http" else send)
 
@@ -176,14 +186,20 @@ def config() -> dict:
     return {"clerk_publishable_key": auth.PUBLISHABLE_KEY, "clerk_frontend_api": auth.frontend_api()}
 
 
+def reader(request: Request) -> str:
+    uid = auth.require_user(request)
+    limits.hit("read_user_min", uid)
+    return uid
+
+
 @app.get("/history")
 def history(request: Request, limit: int = 50) -> dict:
-    return {"items": store.list_checks(auth.require_user(request), limit)}
+    return {"items": store.list_checks(reader(request), limit)}
 
 
 @app.get("/history/{check_id}/audio")
 def history_audio(check_id: str, request: Request):
-    path = store.audio_path(auth.require_user(request), check_id)
+    path = store.audio_path(reader(request), check_id)
     if path is None or not path.exists():
         raise HTTPException(404, "not_found")
     return FileResponse(path)
@@ -191,14 +207,14 @@ def history_audio(check_id: str, request: Request):
 
 @app.delete("/history/{check_id}")
 def history_delete(check_id: str, request: Request) -> dict:
-    if not store.delete(auth.require_user(request), check_id):
+    if not store.delete(reader(request), check_id):
         raise HTTPException(404, "not_found")
     return {"deleted": check_id}
 
 
 @app.get("/stats")
 def user_stats(request: Request) -> dict:
-    return store.stats(auth.require_user(request))
+    return store.stats(reader(request))
 
 
 @app.get("/health")
@@ -207,34 +223,23 @@ def health() -> dict:
             "device": detectors[DEFAULT].device, "tips": LLM_MODEL if llm else "template"}
 
 
-@app.post("/analyze")
-async def analyze(request: Request, file: UploadFile = File(...), lang: str = Form("en"),
-                  model: str = Form("")):
-    # Login required when Clerk is configured: every check belongs to a user and goes to their history.
-    uid = auth.require_user(request) if auth.PUBLISHABLE_KEY else auth.user_id(request)
-    # Per-user limit: behind the Brev proxy every client shares one IP, so an IP key let anyone lock out everyone.
-    if rate_limited(uid or (request.client.host if request.client else "?")):
-        raise HTTPException(429, "too_many_requests")
-    lang = lang if lang in LANGS else "en"
-    model = model if model in detectors else DEFAULT
-    data = await file.read(MAX_BYTES + 1)
-    if len(data) > MAX_BYTES:
-        return JSONResponse({"error": "too_long"}, status_code=400)
+def run_analysis(data: bytes, model: str, lang: str) -> dict:
+    """Blocking work (ffmpeg, model, LLM): runs in a worker thread so the event loop stays free."""
     t0 = time.perf_counter()
-    fd, tmp_path = tempfile.mkstemp(suffix=".upload")
+    fd, tmp_path = tempfile.mkstemp(suffix=".upload")   # never the uploader's extension (it steers ffmpeg probing)
     try:
         with os.fdopen(fd, "wb") as tmp:
             tmp.write(data)
         x = load(tmp_path)
     except Exception:
-        return JSONResponse({"error": "bad_audio"}, status_code=400)
+        return {"error": "bad_audio"}
     finally:
-        os.remove(tmp_path)  # the temp copy never survives; only signed-in users' history keeps the audio
+        os.remove(tmp_path)
     dur = len(x) / SR
     if dur < MIN_S:
-        return JSONResponse({"error": "too_short"}, status_code=400)
+        return {"error": "too_short"}
     if dur > MAX_S:
-        return JSONResponse({"error": "too_long"}, status_code=400)
+        return {"error": "too_long"}
     res = detectors[model].score_array(x)
     p = res["p_fake"]
     core = {"verdict": verdict_of(p), "p_fake": round(p, 4), "confidence": round(abs(p - 0.5) * 2, 4),
@@ -244,10 +249,38 @@ async def analyze(request: Request, file: UploadFile = File(...), lang: str = Fo
     if core["verdict"] != "likely_real":  # pointing at "suspicious seconds" of a real voice would confuse
         facts["most_suspicious_seconds"] = f"{worst['start']:.0f}-{worst['end']:.0f}"
     tips, source = write_tips(facts, lang)
-    result = {**core, "tips": tips, "tips_source": source,
-              "latency_ms": round((time.perf_counter() - t0) * 1000),
-              "model": model, "model_label": MODEL_LABELS[model]}
-    result["saved_id"] = store.save(uid, result, file.filename or "voice note", data, lang) if uid else None
+    return {**core, "tips": tips, "tips_source": source, "latency_ms": round((time.perf_counter() - t0) * 1000),
+            "model": model, "model_label": MODEL_LABELS[model]}
+
+
+@app.post("/analyze")
+async def analyze(request: Request, file: UploadFile = File(...), lang: str = Form("en"),
+                  model: str = Form("")):
+    # Login required when Clerk is configured: every check belongs to a user and goes to their history.
+    uid = auth.require_user(request) if auth.PUBLISHABLE_KEY else auth.user_id(request)
+    key = uid or (request.client.host if request.client else "?")
+    limits.hit("analyze_global_min", "*")
+    limits.hit("analyze_user_min", key)
+    limits.hit("analyze_user_day", key)
+    lang = lang if lang in LANGS else "en"
+    model = model if model in detectors else DEFAULT
+    data = await file.read(MAX_BYTES + 1)
+    if len(data) > MAX_BYTES:
+        return JSONResponse({"error": "too_long"}, status_code=400)
+    if uid and (quota := await run_in_threadpool(store.quota_error, uid, len(data))):
+        return JSONResponse({"error": quota}, status_code=507 if quota == "storage_full" else 409)
+    try:
+        await asyncio.wait_for(_heavy.acquire(), QUEUE_WAIT_S)
+    except asyncio.TimeoutError:
+        return JSONResponse({"error": "busy"}, status_code=503)
+    try:
+        result = await run_in_threadpool(run_analysis, data, model, lang)
+    finally:
+        _heavy.release()
+    if "error" in result:
+        return JSONResponse(result, status_code=400)
+    result["saved_id"] = (await run_in_threadpool(store.save, uid, result, file.filename or "voice note", data, lang)
+                          if uid else None)
     return result
 
 

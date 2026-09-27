@@ -1,6 +1,7 @@
 """Per-user history: SQLite for results, files on disk for the audio. Every query is scoped to user_id."""
 import json
 import os
+import shutil
 import sqlite3
 import time
 import uuid
@@ -9,6 +10,9 @@ from pathlib import Path
 STORAGE = Path(os.environ.get("STORAGE_DIR", "storage"))
 DB_PATH = STORAGE / "roc.db"
 AUDIO_DIR = STORAGE / "audio"
+MAX_ITEMS_PER_USER = 100
+MAX_BYTES_PER_USER = 300 * 1024 * 1024
+MIN_FREE_DISK = 5 * 1024 ** 3        # stop saving before the shared disk fills up
 ALLOWED_EXT = {".ogg", ".opus", ".m4a", ".mp3", ".wav", ".webm", ".flac", ".aac", ".mp4"}
 
 
@@ -27,6 +31,18 @@ def init() -> None:
             verdict TEXT, p_fake REAL, confidence REAL, duration REAL, model TEXT, lang TEXT,
             tips TEXT, windows TEXT, audio_file TEXT)""")
         con.execute("CREATE INDEX IF NOT EXISTS idx_checks_user ON checks(user_id, created_at DESC)")
+
+
+def quota_error(user_id: str, incoming: int) -> str | None:
+    """None if this user may store `incoming` more bytes, else an error code."""
+    with _db() as con:
+        files = [r["audio_file"] for r in con.execute("SELECT audio_file FROM checks WHERE user_id=?", (user_id,))]
+    used = sum((AUDIO_DIR / f).stat().st_size for f in files if (AUDIO_DIR / f).exists())
+    if len(files) >= MAX_ITEMS_PER_USER or used + incoming > MAX_BYTES_PER_USER:
+        return "history_full"
+    if shutil.disk_usage(STORAGE).free - incoming < MIN_FREE_DISK:
+        return "storage_full"
+    return None
 
 
 def save(user_id: str, result: dict, filename: str, audio: bytes, lang: str) -> str:
