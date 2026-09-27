@@ -509,7 +509,26 @@ function loginPrompt(box) {
   const b = document.createElement("button"); b.className = "signin"; b.textContent = T[lang].signIn; b.onclick = () => clerk?.openSignIn();
   d.append(span(T[lang].needLogin), b); box.replaceChildren(d);
 }
+// One shared player: ▶ plays, ■ stops; starting another item stops the current one.
+let player = null, playingId = null;
+function stopPlayer() {
+  if (player) { player.pause(); URL.revokeObjectURL(player.src); }
+  player = null; playingId = null;
+  document.querySelectorAll("#hist .icon-btn[data-id]").forEach((b) => { b.textContent = "▶"; b.title = T[lang].play; });
+}
+async function togglePlay(id, btn) {
+  if (playingId === id) { stopPlayer(); return; }
+  stopPlayer();
+  playingId = id;
+  btn.textContent = "■"; btn.title = "Stop";
+  const r = await fetch(`${API}/history/${id}/audio`, { headers: await authHeaders() });
+  if (!r.ok || playingId !== id) { if (playingId === id) stopPlayer(); return; }
+  player = new Audio(URL.createObjectURL(await r.blob()));
+  player.onended = stopPlayer;
+  player.play().catch(stopPlayer);
+}
 async function renderHistory() {
+  stopPlayer();
   const box = $("hist");
   if (!clerk?.user) { loginPrompt(box); return; }
   const res = await fetch(API + "/history", { headers: await authHeaders() });
@@ -525,10 +544,8 @@ async function renderHistory() {
     mid.append(nm, sub);
     const sc = span(`${Math.round(it.p_fake * 100)}%`); sc.className = "hscore"; sc.title = T[lang].pClone;
     const play = document.createElement("button"); play.className = "icon-btn"; play.textContent = "▶"; play.title = T[lang].play;
-    play.onclick = async () => {
-      const r = await fetch(`${API}/history/${it.id}/audio`, { headers: await authHeaders() });
-      if (r.ok) new Audio(URL.createObjectURL(await r.blob())).play();
-    };
+    play.dataset.id = it.id;
+    play.onclick = () => togglePlay(it.id, play);
     const del = document.createElement("button"); del.className = "icon-btn del"; del.textContent = "✕"; del.title = T[lang].delBtn;
     del.onclick = async () => { await fetch(`${API}/history/${it.id}`, { method: "DELETE", headers: await authHeaders() }); renderHistory(); };
     row.append(chip, mid, sc, play, del);
@@ -551,6 +568,7 @@ async function renderDash() {
   anim("#view-dash .kpi", { opacity: [0, 1], y: [14, 0] }, { delay: motion ? motion.stagger(0.05) : 0, duration: 0.4 });
 }
 function showView(v) {
+  stopPlayer();
   document.querySelectorAll(".views button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.view === v));
   ["check", "history", "dash"].forEach((k) => { $("view-" + k).hidden = k !== v; });
   if (v === "history") renderHistory();
