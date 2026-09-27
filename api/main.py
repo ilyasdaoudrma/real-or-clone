@@ -88,16 +88,18 @@ def write_tips(verdict: dict, lang: str) -> tuple[list[str], str]:
               f"Write exactly 3 short, concrete, varied tips (max 25 words each) in {LANG_NAME[lang]} for the person "
               f"who received this voice note, written for a non-technical family member. If useful, mention the "
               f"most suspicious seconds. Answer ONLY with JSON: {{\"tips\": [\"...\", \"...\", \"...\"]}}")
-    try:
-        extra = {"reasoning_effort": "low"} if "gpt-oss" in LLM_MODEL else {}
-        res = llm.chat.completions.create(model=LLM_MODEL, messages=[{"role": "user", "content": prompt}],
-                                          temperature=0.9, max_tokens=800, extra_body=extra)
-        text = res.choices[0].message.content
-        tips = json.loads(text[text.index("{"):text.rindex("}") + 1])["tips"]
-        if isinstance(tips, list) and len(tips) == 3 and all(isinstance(t, str) and t.strip() for t in tips):
-            return [t.strip() for t in tips], "llm"
-    except Exception as e:  # network, timeout, bad JSON -> fallback, never fail the request
-        print(f"llm fallback: {type(e).__name__}: {e}", flush=True)
+    extra = {"reasoning_effort": "low"} if "gpt-oss" in LLM_MODEL else {}
+    for attempt in range(2):  # one retry: an occasional malformed JSON answer should not cost the user
+        try:
+            res = llm.chat.completions.create(model=LLM_MODEL, messages=[{"role": "user", "content": prompt}],
+                                              temperature=0.8, max_tokens=800, extra_body=extra)
+            text = res.choices[0].message.content or ""
+            tips = json.loads(text[text.index("{"):text.rindex("}") + 1])["tips"]
+            if isinstance(tips, list) and len(tips) == 3 and all(isinstance(t, str) and t.strip() for t in tips):
+                return [t.strip() for t in tips], "llm"
+            print(f"llm attempt {attempt + 1}: bad shape", flush=True)
+        except Exception as e:  # network, timeout, bad JSON -> retry once, then fixed tips
+            print(f"llm attempt {attempt + 1} failed: {type(e).__name__}: {e}", flush=True)
     return TEMPLATES[lang], "template"
 
 
