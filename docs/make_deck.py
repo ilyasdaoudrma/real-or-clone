@@ -168,5 +168,12 @@ text(s, 0.6, 2.1, 12, 4.8, [[("Models  ", LIME), ("XLS-R 300M (Meta, Apache-2.0,
                             [("AI help  ", LIME), ("Claude Code wrote most of the code; the team chose the approach, ran every GPU step, listened to the clones, checked the numbers and caught the shortcut.", TEXT)],
                             [("Try it  ", LIME), ("real-or-clone-9m7lxdq0i.gobrev.dev — sign in with Google or email", TEXT)]], 16)
 
+# 11 thank you
+from pptx.enum.text import PP_ALIGN
+s = slide("", "", 10)
+text(s, 0.6, 2.3, 12.1, 2.0, [[("Thank you", TEXT)]], 110, bold=True, name="!!hero", align=PP_ALIGN.CENTER)
+text(s, 0.6, 4.35, 12.1, 0.6, [[("Real ", TEXT), ("or", RED), (" Clone?", TEXT), ("  ·  شكرًا  ·  Merci", MUTED)]], 22, align=PP_ALIGN.CENTER)
+text(s, 0.6, 5.4, 12.1, 0.5, [[("real-or-clone-9m7lxdq0i.gobrev.dev", LIME)]], 16, align=PP_ALIGN.CENTER)
+
 prs.save(D / "Real-or-Clone.pptx")
 print("saved", D / "Real-or-Clone.pptx", len(prs.slides), "slides")
