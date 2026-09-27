@@ -106,6 +106,11 @@
   .again { margin-top: 14px; background: none; border: 1px solid var(--line-2); color: var(--text); border-radius: 999px; padding: 9px 16px; font: 600 .85rem var(--body); cursor: pointer; }
   footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: space-between; }
   .views { display: flex; gap: 3px; background: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
+  .gate { display: grid; gap: 14px; justify-items: center; text-align: center; padding: 30px 16px; border: 1.5px dashed var(--line-2); border-radius: var(--r-md); }
+  .gate strong { font-family: var(--display); font-size: 1.3rem; }
+  .gate p { color: var(--muted); margin: 0; font-size: .9rem; max-width: 36ch; }
+  .gate .cta { max-width: 280px; padding: 16px; }
+  .locked .tabs, .locked .pane, .locked .models { display: none !important; }
   .views button { border: 0; background: none; color: var(--muted); font: 600 .82rem var(--body); padding: 7px 14px; border-radius: 999px; cursor: pointer; }
   .views button[aria-pressed="true"] { background: var(--accent); color: var(--ink); }
   .head-right { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
@@ -176,7 +181,12 @@
       </div>
     </div>
 
-    <div class="panel" id="panel">
+    <div class="panel locked" id="panel">
+      <div class="gate" id="gate">
+        <strong data-t="gateTitle"></strong>
+        <p data-t="gateText"></p>
+        <button class="cta" id="gateBtn"><span data-t="signIn"></span></button>
+      </div>
       <div class="tabs" role="tablist">
         <button class="tab" role="tab" id="tabUp" aria-selected="true" data-pane="up">⤒ <span data-t="upload"></span></button>
         <button class="tab" role="tab" id="tabRec" aria-selected="false" data-pane="rec">● <span data-t="record"></span></button>
@@ -301,6 +311,7 @@ const T = {
         tipsBy: { llm: "نصائح كتبها ذكاء اصطناعي انطلاقًا من النتيجة فقط", template: "نصائح أمان عامة" } },
 };
 for (const [l, extra] of Object.entries({"en": {"navCheck": "Check", "navHistory": "History", "navDash": "Dashboard", "signIn": "Sign in", "privacy": "Without an account nothing is kept. Signed in, the audio and its result are saved to your private history; you can delete them anytime.", "histNote": "Your private history: each voice note and its result. Only you can see it, and you can delete any item.", "histEmpty": "No checks yet. Analyse a voice note and it will appear here.", "needLogin": "Sign in to keep a private history of your checks.", "dashNote": "Your checks, and how our model performs on held-out test data.", "kTotal": "voice notes checked", "kClone": "likely clones", "kReal": "likely real", "kUnsure": "uncertain", "perfTitle": "Model performance · held-out test (10,122 clips)", "m1": "accuracy on unseen voices", "m2": "EER on unseen generators (ElevenLabs, OpenAI…)", "m3": "EER on our fresh clones", "m4": "real voices wrongly flagged", "figTitle": "Before vs after · runs A / B / C", "saved": "✓ Saved to your history", "notSaved": "Sign in to save this check to your history", "play": "Play", "delBtn": "Delete"}, "fr": {"navCheck": "Vérifier", "navHistory": "Historique", "navDash": "Tableau de bord", "signIn": "Se connecter", "privacy": "Sans compte, rien n'est conservé. Connecté, l'audio et son résultat sont enregistrés dans votre historique privé ; vous pouvez les supprimer à tout moment.", "histNote": "Votre historique privé : chaque vocal et son résultat. Vous seul le voyez, et vous pouvez supprimer chaque élément.", "histEmpty": "Aucune vérification. Analysez un vocal et il apparaîtra ici.", "needLogin": "Connectez-vous pour garder un historique privé de vos vérifications.", "dashNote": "Vos vérifications, et les performances de notre modèle sur des données de test indépendantes.", "kTotal": "vocaux vérifiés", "kClone": "clones probables", "kReal": "probablement réels", "kUnsure": "incertains", "perfTitle": "Performances du modèle · test indépendant (10 122 extraits)", "m1": "précision sur des voix inconnues", "m2": "EER sur des générateurs inconnus (ElevenLabs, OpenAI…)", "m3": "EER sur nos nouveaux clones", "m4": "vraies voix signalées à tort", "figTitle": "Avant / après · runs A / B / C", "saved": "✓ Enregistré dans votre historique", "notSaved": "Connectez-vous pour enregistrer cette vérification", "play": "Écouter", "delBtn": "Supprimer"}, "ar": {"navCheck": "تحقّق", "navHistory": "السجل", "navDash": "لوحة المتابعة", "signIn": "تسجيل الدخول", "privacy": "بدون حساب لا نحتفظ بأي شيء. عند تسجيل الدخول يُحفظ الصوت ونتيجته في سجلك الخاص، ويمكنك حذفهما في أي وقت.", "histNote": "سجلك الخاص: كل رسالة صوتية ونتيجتها. أنت وحدك تراه، ويمكنك حذف أي عنصر.", "histEmpty": "لا توجد عمليات تحقّق بعد. حلّل رسالة صوتية وستظهر هنا.", "needLogin": "سجّل الدخول لتحتفظ بسجل خاص لعمليات التحقّق.", "dashNote": "عمليات التحقّق الخاصة بك، وأداء نموذجنا على بيانات اختبار مستقلة.", "kTotal": "رسالة تم فحصها", "kClone": "مستنسخة على الأرجح", "kReal": "حقيقية على الأرجح", "kUnsure": "غير مؤكدة", "perfTitle": "أداء النموذج · اختبار مستقل (10٬122 مقطعًا)", "m1": "دقة على أصوات جديدة", "m2": "EER على مولّدات لم يرها (ElevenLabs، OpenAI…)", "m3": "EER على مستنسخاتنا الجديدة", "m4": "أصوات حقيقية صُنّفت خطأً", "figTitle": "قبل / بعد · التجارب A / B / C", "saved": "✓ حُفظ في سجلك", "notSaved": "سجّل الدخول لحفظ هذا الفحص في سجلك", "play": "استماع", "delBtn": "حذف"}})) Object.assign(T[l], extra);
+for (const [l, extra] of Object.entries({"en": {"gateTitle": "Sign in to check a voice note", "gateText": "Each check is saved with its audio in your private history. You can delete it anytime.", "privacy": "Your voice notes and results are saved in your private history. Only you can see them, and you can delete them anytime.", "login_required": "Please sign in first."}, "fr": {"gateTitle": "Connectez-vous pour vérifier un vocal", "gateText": "Chaque vérification est enregistrée avec son audio dans votre historique privé. Vous pouvez la supprimer à tout moment.", "privacy": "Vos vocaux et leurs résultats sont enregistrés dans votre historique privé. Vous seul les voyez, et vous pouvez les supprimer à tout moment.", "login_required": "Connectez-vous d'abord."}, "ar": {"gateTitle": "سجّل الدخول لفحص رسالة صوتية", "gateText": "يُحفظ كل فحص مع صوته في سجلك الخاص، ويمكنك حذفه في أي وقت.", "privacy": "تُحفظ رسائلك الصوتية ونتائجها في سجلك الخاص. أنت وحدك تراها، ويمكنك حذفها في أي وقت.", "login_required": "يرجى تسجيل الدخول أولًا."}})) { Object.assign(T[l], extra); T[l].errors.login_required = extra.login_required; }
 const ICON = { likely_real: "✓", likely_clone: "!", uncertain: "?" };
 const params = new URLSearchParams(location.search);
 const API = params.get("api") || "";            // same origin by default
@@ -379,6 +390,7 @@ function showStages(on) {
 }
 
 async function analyse(blob, name) {
+  if (authRequired && !clerk?.user && !MOCK) { clerk?.openSignIn(); status(T[lang].errors.login_required, true); return; }
   status("");
   $("result").classList.remove("show");
   showStages(true);
@@ -453,8 +465,12 @@ async function authHeaders() {
   try { const t = clerk?.session ? await clerk.session.getToken() : null; return t ? { Authorization: "Bearer " + t } : {}; }
   catch { return {}; }
 }
+let authRequired = true;   // becomes false only if the server has no Clerk key configured
 function refreshAuthUi() {
   const signedIn = !!clerk?.user;
+  const locked = authRequired && !signedIn;
+  $("panel").classList.toggle("locked", locked);
+  $("gate").hidden = !locked;
   $("signInBtn").hidden = !clerk || signedIn;
   if (signedIn && !$("userBtn").childElementCount) clerk.mountUserButton($("userBtn"));
   if (!signedIn && $("userBtn").childElementCount) { clerk.unmountUserButton($("userBtn")); $("userBtn").replaceChildren(); }
@@ -462,7 +478,7 @@ function refreshAuthUi() {
   if (!$("view-dash").hidden) renderDash();
 }
 fetch(API + "/config").then((r) => r.json()).then((c) => {
-  if (!c.clerk_publishable_key) return;
+  if (!c.clerk_publishable_key) { authRequired = false; refreshAuthUi(); return; }
   const sc = document.createElement("script");
   sc.async = true; sc.crossOrigin = "anonymous";
   sc.setAttribute("data-clerk-publishable-key", c.clerk_publishable_key);
@@ -471,6 +487,7 @@ fetch(API + "/config").then((r) => r.json()).then((c) => {
   document.head.append(sc);
 }).catch(() => {});
 $("signInBtn").addEventListener("click", () => clerk?.openSignIn());
+$("gateBtn").addEventListener("click", () => clerk?.openSignIn());
 
 // ---------- history + dashboard (server, per signed-in user) ----------
 function loginPrompt(box) {

@@ -3,7 +3,7 @@
 Detects AI voice-clone scams in voice notes. Upload or record a note and get a verdict
 (likely real / likely clone), a confidence score, a timeline of suspicious 2-second windows,
 and 3 safety tips in Arabic, French or English. The LLM only writes the tips from the verdict
-JSON and can never change the verdict. Anonymous checks keep nothing. Signed-in users (Clerk) get a private, deletable history: the audio and its result are stored in a SQLite database on the server.
+JSON and can never change the verdict. A Clerk login is required. Each user gets a private, deletable history: the audio and its result are stored in a SQLite database on the server.
 The detector is trained and tested on English and French speech; the interface and tips are in AR/FR/EN.
 
 GOMYCODE "Come Build with AI" hackathon, 27 Sept 2026. Team: Ilyas Daoud (lead), Oualid Karmoun, Ayoub El Mouhib.

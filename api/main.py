@@ -4,7 +4,7 @@
 
 Contract: api/CONTRACT.md. The LLM (Groq, gpt-oss-120b) only WRITES tips from the verdict JSON;
 the verdict comes from the detector alone and is never sent back through the LLM.
-Anonymous checks keep nothing. Signed-in (Clerk) checks save the audio + result to that user's private,
+Login (Clerk) is required to analyse. Each check saves the audio + result to that user's private,
 deletable history (SQLite + files, see api/store.py).
 """
 import json
@@ -159,7 +159,8 @@ async def analyze(request: Request, file: UploadFile = File(...), lang: str = Fo
         raise HTTPException(429, "too_many_requests")
     lang = lang if lang in LANGS else "en"
     model = model if model in detectors else DEFAULT
-    uid = auth.user_id(request)                      # None = anonymous, nothing saved
+    # Login required when Clerk is configured: every check belongs to a user and goes to their history.
+    uid = auth.require_user(request) if auth.PUBLISHABLE_KEY else auth.user_id(request)
     data = await file.read(MAX_BYTES + 1)
     if len(data) > MAX_BYTES:
         return JSONResponse({"error": "too_long"}, status_code=400)
