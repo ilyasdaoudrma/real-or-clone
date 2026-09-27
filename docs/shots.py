@@ -1,5 +1,6 @@
 """Screenshots of the app for the slides: python docs/shots.py (app running on localhost:8010)."""
 import json
+import os
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
@@ -13,7 +14,7 @@ UNLOCK = "document.getElementById('panel').classList.remove('locked'); document.
 with sync_playwright() as p:
     b = p.chromium.launch(channel="chrome")
     pg = b.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=1.5)
-    pg.goto("http://localhost:8010/", wait_until="networkidle")
+    pg.goto(os.environ.get("APP_URL", "http://localhost:8010/"), wait_until="networkidle")
     pg.wait_for_timeout(2500)
     pg.screenshot(path=str(OUT / "1_home.png"))
     pg.evaluate(UNLOCK + f"render({json.dumps(MOCK)}, false); window.scrollTo(0, 0);")
@@ -26,7 +27,7 @@ with sync_playwright() as p:
     pg.wait_for_timeout(1500)
     pg.screenshot(path=str(OUT / "4_dashboard.png"), full_page=True)
     mob = b.new_page(viewport={"width": 390, "height": 844}, device_scale_factor=2)
-    mob.goto("http://localhost:8010/", wait_until="networkidle")
+    mob.goto(os.environ.get("APP_URL", "http://localhost:8010/"), wait_until="networkidle")
     mob.wait_for_timeout(2000)
     mob.evaluate(UNLOCK + f"render({json.dumps(MOCK)}, false); document.getElementById('result').scrollIntoView();")
     mob.wait_for_timeout(1200)

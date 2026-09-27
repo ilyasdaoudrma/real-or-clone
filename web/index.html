@@ -2,11 +2,12 @@
 <html lang="en" dir="ltr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
 <title>Real or Clone?</title>
 <meta name="description" content="Check if a voice note is a real voice or an AI clone: verdict, suspicious seconds and safety tips in Arabic, French and English.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
   :root {
     --ink: #07080A; --ink-2: #0E1014; --card: rgba(16, 18, 22, 0.9); --line: rgba(255, 255, 255, 0.08);
@@ -212,6 +213,105 @@
     .brand b, .brand { font-size: .92rem; }
     .seg button { padding: 6px 7px; min-width: 30px; }
   }
+
+  /* ================= Apple-style layer (dark, glass, SF type, springs) ================= */
+  :root {
+    --ink: #000; --ink-2: rgba(118,118,128,.24); --card: rgba(28,28,30,.55);
+    --line: rgba(255,255,255,.08); --line-2: rgba(255,255,255,.14);
+    --text: #F5F5F7; --muted: #98989D; --accent: #0A84FF;
+    --real: #30D158; --clone: #FF453A; --unsure: #FF9F0A;
+    --r-lg: 28px; --r-md: 18px;
+    --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "IBM Plex Sans Arabic", system-ui, sans-serif;
+    --body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "IBM Plex Sans Arabic", system-ui, sans-serif;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
+    --spring: cubic-bezier(.34, 1.56, .64, 1); --ease: cubic-bezier(.22, 1, .36, 1);
+    --glass: saturate(180%) blur(28px);
+  }
+  body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; letter-spacing: -.01em; }
+  /* background: the same waveform, slow Ken Burns + parallax (translate is composed separately) */
+  .art { opacity: .5; translate: var(--px, 0px) calc(var(--py, 0px) + var(--sy, 0px));
+    animation: kenburns 26s var(--ease) infinite alternate; will-change: transform, translate; }
+  @keyframes kenburns { from { transform: scale(1.04); filter: saturate(1) brightness(1); } to { transform: scale(1.14); filter: saturate(1.25) brightness(1.08); } }
+  .scrim { background: radial-gradient(120% 90% at 30% 20%, rgba(0,0,0,.55), rgba(0,0,0,.85) 70%), linear-gradient(180deg, rgba(0,0,0,.2), #000 92%); }
+  .glow { background: radial-gradient(38% 32% at 18% 18%, rgba(10,132,255,.14), transparent 70%),
+                      radial-gradient(34% 30% at 86% 28%, rgba(255,69,58,.12), transparent 70%),
+                      radial-gradient(40% 40% at 60% 92%, rgba(48,209,88,.08), transparent 70%); animation-duration: 30s; }
+  .grain { opacity: .035; }
+
+  header { position: sticky; top: 0; z-index: 40; margin: -22px calc(50% - 50vw) 0; padding: 14px max(16px, calc(50vw - 540px + 16px));
+    background: rgba(0,0,0,.55); -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass);
+    border-bottom: 1px solid var(--line); }
+  .brand { font-weight: 700; letter-spacing: -.02em; }
+  .brand i { background: var(--accent); box-shadow: 0 0 16px rgba(10,132,255,.9); }
+  /* segmented controls (iOS) */
+  .seg, .views, .tabs { background: var(--ink-2); border: 0; border-radius: 12px; padding: 3px; }
+  .seg button, .views button, .tab { border-radius: 9px; color: var(--text); opacity: .72; font-weight: 600;
+    transition: background .35s var(--ease), opacity .25s, transform .3s var(--spring), box-shadow .35s; }
+  .seg button[aria-pressed="true"], .views button[aria-pressed="true"], .tab[aria-selected="true"] {
+    background: #636366; color: #fff; opacity: 1; box-shadow: 0 3px 8px rgba(0,0,0,.35), inset 0 0 0 .5px rgba(255,255,255,.12); }
+  .seg button:active, .views button:active, .tab:active { transform: scale(.95); }
+  .signin { background: var(--ink-2); border: 0; border-radius: 980px; color: var(--text); font-weight: 600; transition: transform .3s var(--spring), background .2s; }
+  .signin:hover { background: rgba(118,118,128,.36); color: var(--text); }
+  .signin:active { transform: scale(.95); }
+
+  /* type */
+  .kicker { font-family: var(--body); font-size: .95rem; letter-spacing: -.01em; text-transform: none; font-weight: 600; color: var(--accent); }
+  h1 { font-weight: 700; letter-spacing: -.045em; line-height: 1.02; }
+  h1 em { background: linear-gradient(90deg, #FF453A, #FF9F0A); -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: none; filter: drop-shadow(0 6px 24px rgba(255,69,58,.35)); }
+  .lede { color: #A1A1A6; font-size: 1.15rem; line-height: 1.45; }
+  .pill { font-family: var(--body); font-weight: 500; background: var(--ink-2); border: 0; -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass); }
+  .pill b { color: var(--text); font-weight: 700; }
+  .label, .models > span, .panel h2, .section-h { font-family: var(--body); text-transform: none; letter-spacing: -.01em; font-size: .82rem; font-weight: 600; color: var(--muted); }
+
+  /* glass cards */
+  .panel, .kpi, .hrow, .empty { background: var(--card); -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass);
+    border: 1px solid var(--line); box-shadow: 0 24px 60px -28px rgba(0,0,0,.85); }
+  .panel { border-radius: var(--r-lg); }
+  .kpi, .hrow { transition: transform .45s var(--spring), background .3s; }
+  .kpi:hover, .hrow:hover { transform: translateY(-3px); background: rgba(44,44,46,.6); }
+  .drop { border: 1.5px dashed rgba(255,255,255,.18); border-radius: 20px; transition: border-color .3s, background .3s, transform .4s var(--spring); }
+  .drop:hover, .drop.over { border-color: var(--accent); background: rgba(10,132,255,.07); transform: scale(1.01); }
+  .gate { border: 0; background: rgba(118,118,128,.1); border-radius: 22px; }
+  /* buttons: Apple pill */
+  .cta { background: var(--accent); color: #fff; border-radius: 980px; font-weight: 600; letter-spacing: -.01em;
+    box-shadow: 0 10px 30px -10px rgba(10,132,255,.7); transition: transform .35s var(--spring), filter .2s, box-shadow .3s; }
+  .cta:hover { filter: brightness(1.1); box-shadow: 0 14px 36px -10px rgba(10,132,255,.85); }
+  .cta:active { transform: scale(.96); }
+  .cta .dot { background: #fff; }
+  .cta.on { background: var(--clone); box-shadow: 0 10px 30px -10px rgba(255,69,58,.7); }
+  .again, .icon-btn { background: var(--ink-2); border: 0; border-radius: 980px; transition: transform .3s var(--spring), background .2s; }
+  .icon-btn { border-radius: 50%; }
+  .again:active, .icon-btn:active { transform: scale(.92); }
+  .icon-btn.del:hover { background: rgba(255,69,58,.2); color: var(--clone); }
+
+  /* result */
+  .verdict { border: 0; -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass); box-shadow: 0 24px 60px -28px rgba(0,0,0,.85); }
+  .verdict.likely_real { background: linear-gradient(160deg, rgba(48,209,88,.22), rgba(28,28,30,.6) 60%); }
+  .verdict.likely_clone { background: linear-gradient(160deg, rgba(255,69,58,.26), rgba(28,28,30,.6) 60%); }
+  .verdict.uncertain { background: linear-gradient(160deg, rgba(255,159,10,.22), rgba(28,28,30,.6) 60%); }
+  .vicon { box-shadow: 0 0 0 6px color-mix(in srgb, var(--v) 12%, transparent); }
+  .track { height: 8px; background: rgba(118,118,128,.28); }
+  .timeline b { border-radius: 8px 8px 4px 4px; }
+  ol.tips li::before { border-radius: 50%; background: rgba(10,132,255,.18); color: var(--accent); font-family: var(--body); font-weight: 700; }
+  .stage.done i { background: var(--accent); border-color: var(--accent); }
+  .stage.active i { border-color: var(--accent); }
+  .saved { color: var(--real); font-family: var(--body); font-weight: 600; }
+  .figs img { border-radius: 18px; }
+  .src { font-family: var(--body); font-size: .78rem; letter-spacing: -.01em; }
+  footer { border-top-color: var(--line); }
+
+  @media (max-width: 760px) {
+    /* no backdrop-filter here: it would become the containing block of the fixed tab bar inside it */
+    header { margin: -14px calc(50% - 50vw) 0; padding: 12px 14px; -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(0,0,0,.88); }
+    /* iOS tab bar: translucent, no filled pill, tinted icon when selected */
+    .views { background: rgba(28,28,30,.7); -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass);
+      border: 1px solid var(--line); border-radius: 26px; }
+    .views button[aria-pressed="true"] { background: transparent; box-shadow: none; color: var(--accent); }
+    .views button { opacity: .6; }
+    h1 { letter-spacing: -.04em; }
+  }
+  @media (prefers-reduced-motion: reduce) { .art { animation: none; translate: none; } }
   [dir="rtl"] h1, [dir="rtl"] .vbig { font-family: var(--body); letter-spacing: 0; line-height: 1.2; }
   @media (prefers-reduced-motion: reduce) { .art, .glow, .cta.on .dot, .stage.active i { animation: none; } }
 </style>
@@ -526,6 +626,23 @@ $("again").addEventListener("click", () => { $("result").classList.remove("show"
 document.querySelectorAll("header .seg button").forEach((b) => b.addEventListener("click", () => setLang(b.dataset.lang)));
 setLang("en");
 
+// Apple-style parallax: the waveform drifts with the pointer and scroll (one rAF per frame, off when reduced motion).
+(() => {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const art = document.querySelector(".art");
+  let px = 0, py = 0, tx = 0, ty = 0, raf = 0;
+  const tick = () => {
+    px += (tx - px) * 0.06; py += (ty - py) * 0.06;
+    art.style.setProperty("--px", px.toFixed(1) + "px");
+    art.style.setProperty("--py", py.toFixed(1) + "px");
+    art.style.setProperty("--sy", (-scrollY * 0.12).toFixed(1) + "px");
+    raf = Math.abs(tx - px) + Math.abs(ty - py) > 0.2 ? requestAnimationFrame(tick) : 0;
+  };
+  const kick = () => { if (!raf) raf = requestAnimationFrame(tick); };
+  addEventListener("pointermove", (e) => { tx = (e.clientX / innerWidth - 0.5) * -28; ty = (e.clientY / innerHeight - 0.5) * -18; kick(); }, { passive: true });
+  addEventListener("scroll", kick, { passive: true });
+})();
+
 // ---------- Clerk login ----------
 let clerk = null;
 async function authHeaders() {
@@ -622,6 +739,7 @@ async function renderDash() {
 }
 function showView(v) {
   stopPlayer();
+  anim("#view-" + v, { opacity: [0, 1], y: [14, 0], scale: [0.99, 1] }, { duration: 0.5, ease: [0.22, 1, 0.36, 1] });
   document.querySelectorAll(".views button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.view === v));
   ["check", "history", "dash"].forEach((k) => { $("view-" + k).hidden = k !== v; });
   if (v === "history") renderHistory();
