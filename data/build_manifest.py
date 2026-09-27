@@ -7,7 +7,8 @@ Split rules (no leakage):
   * FLEURS real: its own train/dev -> train, test -> test
   * MLAAD fake: whole GENERATORS are held out for test (every commercial API + ~20% of the rest),
     so the test measures generators the model never saw
-  * In-the-Wild: all test (out-of-domain, real-world celebrity/politician deepfakes)
+  * In-the-Wild: split by SPEAKER (30% of speakers test-only); run c trains on the other 70%
+  * VoxPopuli real (parliament speech, many mics): split by speaker, 20% test
   * Our Chatterbox clones: split comes from generate/clone.py (by reference speaker)
 """
 import csv
@@ -21,6 +22,8 @@ load_dotenv()
 DATA_DIR = Path(os.environ.get("DATA_DIR", "~/roc_data")).expanduser()
 SEED = 13
 HELDOUT_FRACTION = 0.2
+ITW_TEST_SPEAKERS = 0.3
+VOX_TEST_SPEAKERS = 0.2
 # Commercial APIs a scammer would actually use: always held out, never trained on.
 HELDOUT_KEYWORDS = ("ElevenLabs", "OpenAI", "Cartesia", "Gemini", "DeepGram", "MiniMax",
                     "minimax", "Inworld", "Hume", "Resemble.ai", "Rime", "Smallest")
@@ -59,9 +62,23 @@ def itw_rows() -> list[dict]:
     if not meta.exists():
         return []
     with open(meta, encoding="utf-8") as f:
-        return [{"path": str(root / r["file"]), "label": 0 if r["label"] == "bona-fide" else 1,
-                 "source": "itw", "generator": "itw", "lang": "en", "split": "test"}
-                for r in csv.DictReader(f)]
+        rows = list(csv.DictReader(f))
+    speakers = sorted({r["speaker"] for r in rows})
+    test_spk = set(random.Random(SEED).sample(speakers, round(len(speakers) * ITW_TEST_SPEAKERS)))
+    return [{"path": str(root / r["file"]), "label": 0 if r["label"] == "bona-fide" else 1,
+             "source": "itw", "generator": "itw", "lang": "en",
+             "split": "test" if r["speaker"] in test_spk else "train"} for r in rows]
+
+
+def voxpopuli_rows() -> list[dict]:
+    rows = []
+    for meta in sorted((DATA_DIR / "voxpopuli").glob("*/meta.csv")):
+        with open(meta, encoding="utf-8") as f:
+            rows += list(csv.DictReader(f))
+    speakers = sorted({(r["lang"], r["speaker"]) for r in rows})
+    test_spk = set(random.Random(SEED).sample(speakers, round(len(speakers) * VOX_TEST_SPEAKERS)))
+    return [{"path": r["path"], "label": 0, "source": "voxpopuli", "generator": "real", "lang": r["lang"],
+             "split": "test" if (r["lang"], r["speaker"]) in test_spk else "train"} for r in rows]
 
 
 def clone_rows() -> list[dict]:
@@ -74,7 +91,7 @@ def clone_rows() -> list[dict]:
 
 
 def main() -> None:
-    rows = fleurs_rows() + mlaad_rows() + itw_rows() + clone_rows()
+    rows = fleurs_rows() + mlaad_rows() + itw_rows() + clone_rows() + voxpopuli_rows()
     out = DATA_DIR / "manifest.csv"
     with open(out, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=["path", "label", "source", "generator", "lang", "split"])

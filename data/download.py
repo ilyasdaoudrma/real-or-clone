@@ -29,6 +29,7 @@ HF_TOKEN = os.environ.get("HF_TOKEN") or None
 FLEURS_TRAIN_LANGS = ["fr_fr", "en_us"]          # real speech for training
 MLAAD_LANGS = {"fr": 150, "en": 120}          # files per generator
 SEED = 13
+VOXPOPULI_PER_LANG = 4000   # varied REAL speech (many speakers/mics) so "not FLEURS" != "fake"
 
 
 def _extract_tar(path: Path, dest: Path) -> None:
@@ -103,7 +104,40 @@ def download_mlaad(tiny: bool) -> None:
         w.writerows(selected)
 
 
-SOURCES = {"fleurs": download_fleurs, "itw": download_itw, "mlaad": download_mlaad}
+def download_voxpopuli(tiny: bool) -> None:
+    import io
+
+    import pyarrow.parquet as pq
+    import soundfile as sf
+    for lang in ("fr", "en"):
+        out = DATA_DIR / "voxpopuli" / lang
+        meta = out / "meta.csv"
+        if meta.exists():
+            continue
+        pqf = hf_hub_download("facebook/voxpopuli", f"{lang}/test-00000-of-00001.parquet", repo_type="dataset")
+        out.mkdir(parents=True, exist_ok=True)
+        cap = 5 if tiny else VOXPOPULI_PER_LANG
+        rows = []
+        for batch in pq.ParquetFile(pqf).iter_batches(batch_size=256, columns=["audio_id", "speaker_id", "audio"]):
+            for r in batch.to_pylist():
+                x, sr = sf.read(io.BytesIO(r["audio"]["bytes"]), dtype="float32")
+                if len(x) < sr * 2:
+                    continue
+                path = out / f"{r['audio_id']}.wav"
+                sf.write(path, x, sr)
+                rows.append([str(path), lang, r["speaker_id"]])
+                if len(rows) >= cap:
+                    break
+            if len(rows) >= cap:
+                break
+        with open(meta, "w", newline="", encoding="utf-8") as f:
+            w = csv.writer(f)
+            w.writerow(["path", "lang", "speaker"])
+            w.writerows(rows)
+        print(f"voxpopuli {lang}: {len(rows)} clips")
+
+
+SOURCES = {"fleurs": download_fleurs, "itw": download_itw, "mlaad": download_mlaad, "voxpopuli": download_voxpopuli}
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()

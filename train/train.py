@@ -2,6 +2,7 @@
 
     python -m train.train --run a            # baseline: public data only
     python -m train.train --run b            # + our fresh Chatterbox clones
+    python -m train.train --run c            # + varied real speech (VoxPopuli) + In-the-Wild train speakers
     python -m train.train --run a --max-steps 20 --batch 4   # smoke test (3060)
 
 Saves checkpoints/run_<a|b>/ (HF format, loadable by train.detector.Detector).
@@ -50,14 +51,13 @@ class Clips(Dataset):
 def load_rows(run: str) -> list[dict]:
     with open(DATA_DIR / "manifest_vn.csv", encoding="utf-8") as f:
         rows = [r for r in csv.DictReader(f) if r["split"] == "train"]
-    if run == "a":
-        rows = [r for r in rows if r["source"] != "clones"]
-    return rows
+    excluded = {"a": {"clones", "itw", "voxpopuli"}, "b": {"itw", "voxpopuli"}, "c": set()}[run]
+    return [r for r in rows if r["source"] not in excluded]
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--run", choices=["a", "b"], required=True)
+    ap.add_argument("--run", choices=["a", "b", "c"], required=True)
     ap.add_argument("--epochs", type=float, default=3)
     ap.add_argument("--batch", type=int, default=32)
     ap.add_argument("--lr", type=float, default=3e-5)

@@ -55,7 +55,7 @@ def metrics(rows: list[dict]) -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--run", choices=["a", "b"], required=True)
+    ap.add_argument("--run", choices=["a", "b", "c"], required=True)
     ap.add_argument("--max-per-group", type=int, default=4000, help="cap per source to keep eval fast")
     args = ap.parse_args()
 
@@ -85,6 +85,7 @@ def main() -> None:
 
     fleurs = scored.get("fleurs", [])
     groups = {
+        "voxpopuli_real_false_alarms": scored.get("voxpopuli", []),
         "mlaad_heldout": scored.get("mlaad", []) + fleurs,
         "itw": scored.get("itw", []),
         "clones": scored.get("clones", []) + fleurs,
