@@ -26,6 +26,12 @@
                 radial-gradient(40% 40% at 60% 90%, rgba(46,229,157,.08), transparent 70%);
     animation: drift 24s ease-in-out infinite alternate; }
   @keyframes drift { to { transform: translate3d(4%, -3%, 0) rotate(4deg); } }
+  /* background art: Higgsfield (Z Image) — real (lime) waveform fracturing into a clone (red) */
+  .art { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: url("bg/waveform.jpg") center 62% / cover no-repeat;
+    opacity: .42; mask-image: linear-gradient(to bottom, transparent 0%, #000 35%, #000 80%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 35%, #000 80%, transparent 100%); animation: breathe 14s ease-in-out infinite alternate; }
+  @keyframes breathe { to { transform: scale(1.06); opacity: .5; } }
+  @media (max-width: 760px) { .art { background-position: 35% 70%; opacity: .3; } }
   .grain { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .07; mix-blend-mode: overlay;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
   main { position: relative; z-index: 2; max-width: 1080px; margin: 0 auto; padding: 22px 16px 60px; }
@@ -149,11 +155,11 @@
   .figs .wide { grid-column: 1 / -1; }
   .saved { font-family: var(--mono); font-size: .74rem; color: var(--accent); margin-top: 12px; }
   [dir="rtl"] h1, [dir="rtl"] .vbig { font-family: var(--body); letter-spacing: 0; line-height: 1.2; }
-  @media (prefers-reduced-motion: reduce) { .glow, .cta.on .dot, .stage.active i { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .art, .glow, .cta.on .dot, .stage.active i { animation: none; } }
 </style>
 </head>
 <body>
-<div class="glow"></div><div class="grain"></div>
+<div class="art"></div><div class="glow"></div><div class="grain"></div>
 <main>
   <header>
     <div class="brand"><i></i>Real <b>or</b> Clone?</div>
