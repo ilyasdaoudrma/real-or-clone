@@ -14,7 +14,7 @@
     "Ask your family code word — a clone will not know it.",
     "Never send money because of a voice note alone, however urgent it sounds."
   ],
-  "tips_source": "nim",
+  "tips_source": "llm",
   "latency_ms": 640,
   "model": "run_b"
 }

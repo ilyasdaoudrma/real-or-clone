@@ -16,7 +16,7 @@ GOMYCODE "Come Build with AI" hackathon, 27 Sept 2026. Team: Ilyas Daoud (lead),
 | `augment/` | voice-note simulation (Opus 16 kbps, 8 kHz band, noise, reverb) on real AND fake |
 | `train/` | XLS-R 300M fine-tune (real/fake head) |
 | `eval/` | EER and false alarms on held-out generators |
-| `api/` | FastAPI inference endpoint + NIM tips |
+| `api/` | FastAPI inference endpoint + LLM tips (Groq) |
 | `web/` | mobile-first web app |
 
 ## Run on Brev (Jupyter → File → New → Terminal)
@@ -33,7 +33,7 @@ tail -f download.log
 |---|---|---|---|
 | XLS-R 300M | HF `facebook/wav2vec2-xls-r-300m` | Apache-2.0 | detector backbone (fine-tuned by us) |
 | Chatterbox Multilingual v3 | HF `ResembleAI/chatterbox` | MIT | generates fresh clones for training/test |
-| Llama 3.3 70B Instruct via NVIDIA NIM | `integrate.api.nvidia.com` | Llama 3.3 Community | writes safety tips from the verdict JSON |
+| gpt-oss-120b via Groq API | `api.groq.com` | Apache-2.0 | writes safety tips from the verdict JSON (fallback: fixed templates) |
 | FLEURS | HF `google/fleurs` | CC-BY-4.0 | real speech (fr_fr, en_us) |
 | In-the-Wild | HF `mueller91/In-The-Wild` | CC-BY-SA-4.0 | real + fake, held-out test |
 | MLAAD (FR/EN subset) | HF `mueller91/MLAAD` | CC-BY-NC-4.0 | fake speech from many TTS generators |

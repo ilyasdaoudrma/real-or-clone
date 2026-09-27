@@ -11,7 +11,7 @@ Response 200:
   "duration": 9.4,
   "windows": [ {"start": 0.0, "end": 4.0, "p_fake": 0.91}, {"start": 2.0, "end": 6.0, "p_fake": 0.83} ],
   "tips": ["...", "...", "..."],       // 3 tips in `lang`, written by the LLM FROM the verdict, never changing it
-  "tips_source": "nim",                // "nim" | "template" (fallback)
+  "tips_source": "llm",                // "llm" | "template" (fallback)
   "latency_ms": 640,
   "model": "run_b"
 }

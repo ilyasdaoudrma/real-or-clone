@@ -2,7 +2,7 @@
 
     CKPT=checkpoints/run_b uvicorn api.main:app --host 0.0.0.0 --port 8000
 
-Contract: api/CONTRACT.md. The LLM (NVIDIA NIM) only WRITES tips from the verdict JSON;
+Contract: api/CONTRACT.md. The LLM (Groq, gpt-oss-120b) only WRITES tips from the verdict JSON;
 the verdict comes from the detector alone and is never sent back through the LLM.
 Nothing is stored: the upload lives in a temp file that is deleted right after scoring.
 """
@@ -47,8 +47,9 @@ LANG_NAME = {"en": "English", "fr": "French", "ar": "Modern Standard Arabic"}
 app = FastAPI(title="Real or Clone?")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"], allow_headers=["*"])
 detector = Detector(CKPT)
-nim = OpenAI(base_url=os.environ.get("NIM_BASE_URL", "https://integrate.api.nvidia.com/v1"),
-             api_key=os.environ["NVIDIA_API_KEY"], timeout=8.0) if os.environ.get("NVIDIA_API_KEY") else None
+LLM_MODEL = os.environ.get("LLM_MODEL", "openai/gpt-oss-120b")
+llm = OpenAI(base_url=os.environ.get("LLM_BASE_URL", "https://api.groq.com/openai/v1"),
+             api_key=os.environ["LLM_API_KEY"], timeout=8.0) if os.environ.get("LLM_API_KEY") else None
 hits: dict[str, deque] = defaultdict(deque)
 
 
@@ -61,8 +62,8 @@ def verdict_of(p_fake: float) -> str:
 
 
 def write_tips(verdict: dict, lang: str) -> tuple[list[str], str]:
-    """3 tips from the LLM, or fixed templates if NIM is missing, slow or malformed."""
-    if nim is None:
+    """3 tips from the LLM, or fixed templates if the LLM is missing, slow or malformed."""
+    if llm is None:
         return TEMPLATES[lang], "template"
     prompt = (f"A voice-clone detector analysed a voice note. Its result (final, do not question it):\n"
               f"{json.dumps(verdict)}\n"
@@ -71,15 +72,15 @@ def write_tips(verdict: dict, lang: str) -> tuple[list[str], str]:
               f"never send money on a voice note alone). Do not state a different verdict or probability. "
               f'Answer ONLY with JSON: {{"tips": ["...", "...", "..."]}}')
     try:
-        res = nim.chat.completions.create(
-            model=os.environ.get("NIM_MODEL", "meta/llama-3.3-70b-instruct"),
-            messages=[{"role": "user", "content": prompt}], temperature=0.3, max_tokens=300)
+        extra = {"reasoning_effort": "low"} if "gpt-oss" in LLM_MODEL else {}
+        res = llm.chat.completions.create(model=LLM_MODEL, messages=[{"role": "user", "content": prompt}],
+                                          temperature=0.3, max_tokens=800, extra_body=extra)
         text = res.choices[0].message.content
         tips = json.loads(text[text.index("{"):text.rindex("}") + 1])["tips"]
         if isinstance(tips, list) and len(tips) == 3 and all(isinstance(t, str) and t.strip() for t in tips):
-            return [t.strip() for t in tips], "nim"
+            return [t.strip() for t in tips], "llm"
     except Exception as e:  # network, timeout, bad JSON -> fallback, never fail the request
-        print(f"nim fallback: {type(e).__name__}: {e}", flush=True)
+        print(f"llm fallback: {type(e).__name__}: {e}", flush=True)
     return TEMPLATES[lang], "template"
 
 
@@ -93,7 +94,7 @@ def rate_limited(ip: str) -> bool:
 
 @app.get("/health")
 def health() -> dict:
-    return {"ok": True, "model": Path(CKPT).name, "device": detector.device, "tips": "nim" if nim else "template"}
+    return {"ok": True, "model": Path(CKPT).name, "device": detector.device, "tips": LLM_MODEL if llm else "template"}
 
 
 @app.post("/analyze")
