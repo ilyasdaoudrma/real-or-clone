@@ -15,6 +15,7 @@
   <img alt="NVIDIA Brev" src="https://img.shields.io/badge/NVIDIA_Brev-L40S-07080A?logo=nvidia&logoColor=76B900">
   <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-API-07080A?logo=fastapi&logoColor=2EE59D">
   <img alt="Clerk" src="https://img.shields.io/badge/Clerk-auth-07080A?logo=clerk&logoColor=F3F1EA">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-07080A?labelColor=07080A&color=D4FF3A"></a>
 </p>
 
 <p align="center"><b>Scammers need 3 seconds of audio to clone a voice.</b><br>
@@ -165,6 +166,11 @@ CKPT=checkpoints/run_c uvicorn api.main:app --host 0.0.0.0 --port 8000
 | Clerk · SQLite · FastAPI · Motion | — | — | auth, history, API, animations |
 
 Code written with **Claude Code**; the team chose the approach, ran every GPU step, listened to the clones, checked the numbers and caught the shortcut. Background art generated with Higgsfield; video voiceover with ElevenLabs.
+
+## License
+
+The **code** in this repository is released under the [MIT License](LICENSE).
+Models and datasets keep their own licences (see *Built with*). Because MLAAD is CC-BY-NC-4.0, **the trained detector weights are for non-commercial use only**; they are not included in this repository.
 
 ## Team
 
