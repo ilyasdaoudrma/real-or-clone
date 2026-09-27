@@ -3,7 +3,7 @@
 GOMYCODE "Come Build with AI" hackathon — Morocco — 27 Sept 2026
 Team: Ilyas Daoud (lead, ML), Oualid Karmoun (data, testing, slides), Ayoub El Mouhib (web app, demo video)
 
-- **Prototype URL:** TODO (Brev secure link to the FastAPI app, port 8000)
+- **Prototype URL:** https://real-or-clone-9m7lxdq0i.gobrev.dev (live on the Brev L40S, model run c)
 - **90-second demo video:** TODO
 - **Source code:** https://github.com/ilyasdaoudrma/real-or-clone
 - **Presentation:** TODO
