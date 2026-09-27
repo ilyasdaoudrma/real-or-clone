@@ -161,6 +161,57 @@
   .figs img { width: 100%; border-radius: var(--r-md); background: #fff; display: block; }
   .figs .wide { grid-column: 1 / -1; }
   .saved { font-family: var(--mono); font-size: .74rem; color: var(--accent); margin-top: 12px; }
+  .brand { direction: ltr; unicode-bidi: isolate; }
+  .hero > *, .result > *, .intro { min-width: 0; }   /* grid items must not grow to their content (pill row) */
+  .views i { display: none; font-style: normal; }
+  .scrollx { overflow-x: auto; border-radius: var(--r-md); }
+  .scrollx img { min-width: 100%; }
+
+  /* ---------- phones ---------- */
+  @media (max-width: 760px) {
+    main { padding: 14px 14px calc(96px + env(safe-area-inset-bottom)); }
+    header { gap: 8px; min-width: 0; }
+    header > * { min-width: 0; }
+    .brand { font-size: 1.02rem; gap: 8px; white-space: nowrap; }
+    .head-right { flex-wrap: nowrap; gap: 6px; }
+    .seg { padding: 3px; }
+    .seg button { padding: 7px 9px; font-size: .78rem; min-width: 34px; }
+    .signin { padding: 8px 11px; font-size: .78rem; white-space: nowrap; max-width: 96px; overflow: hidden; text-overflow: ellipsis; }
+    #userBtn { display: grid; place-items: center; }
+    /* section tabs become an app-style bottom bar */
+    .views { position: fixed; z-index: 50; left: 12px; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom));
+      display: grid; grid-template-columns: repeat(3, 1fr); padding: 6px; border-radius: 20px;
+      background: rgba(14,16,20,.94); backdrop-filter: blur(16px); border-color: var(--line-2); box-shadow: 0 18px 40px -12px rgba(0,0,0,.8); }
+    .views button { display: grid; justify-items: center; gap: 2px; padding: 8px 4px; border-radius: 14px; font-size: .72rem; }
+    .views i { display: block; font-size: 1.05rem; line-height: 1; }
+    .hero { margin-top: 22px; gap: 18px; }
+    h1 { font-size: clamp(2rem, 9.5vw, 2.6rem); margin: 10px 0 10px; }
+    .lede { font-size: .95rem; }
+    .proof { flex-wrap: nowrap; overflow-x: auto; margin: 16px -14px 0; padding: 0 14px 4px; scrollbar-width: none; }
+    .proof::-webkit-scrollbar { display: none; }
+    .pill { white-space: nowrap; flex: none; font-size: .72rem; }
+    .panel { padding: 14px; border-radius: 22px; }
+    .gate { padding: 22px 12px; }
+    .gate strong { font-size: 1.15rem; }
+    .drop { padding: 26px 12px; }
+    .cta { padding: 18px; }
+    .models .seg button { font-size: .7rem; line-height: 1.25; padding: 8px 6px; }
+    .result { margin-top: 22px; gap: 12px; }
+    .verdict { padding: 20px; }
+    .vicon { width: 48px; height: 48px; font-size: 1.3rem; }
+    .timeline { height: 72px; }
+    .hrow { grid-template-columns: auto 1fr auto auto; gap: 10px; padding: 12px; }
+    .hrow .hscore { display: none; }
+    .icon-btn { width: 40px; height: 40px; }
+    .page-title { margin-top: 22px; }
+    .kpi { padding: 14px; } .kpi b { font-size: 1.8rem; }
+    .scrollx img { min-width: 680px; }
+    footer { margin-top: 32px; }
+  }
+  @media (max-width: 370px) {
+    .brand b, .brand { font-size: .92rem; }
+    .seg button { padding: 6px 7px; min-width: 30px; }
+  }
   [dir="rtl"] h1, [dir="rtl"] .vbig { font-family: var(--body); letter-spacing: 0; line-height: 1.2; }
   @media (prefers-reduced-motion: reduce) { .art, .glow, .cta.on .dot, .stage.active i { animation: none; } }
 </style>
@@ -172,12 +223,12 @@
     <div class="brand"><i></i>Real <b>or</b> Clone?</div>
     <div class="head-right">
     <nav class="views" aria-label="Sections">
-      <button data-view="check" aria-pressed="true" data-t="navCheck"></button><button data-view="history" data-t="navHistory"></button><button data-view="dash" data-t="navDash"></button>
+      <button data-view="check" aria-pressed="true"><i aria-hidden="true">◉</i><span data-t="navCheck"></span></button><button data-view="history"><i aria-hidden="true">↺</i><span data-t="navHistory"></span></button><button data-view="dash"><i aria-hidden="true">▦</i><span data-t="navDash"></span></button>
     </nav>
     <nav class="seg" aria-label="Language">
       <button data-lang="ar">ع</button><button data-lang="fr">FR</button><button data-lang="en" aria-pressed="true">EN</button>
     </nav>
-    <button class="signin" id="signInBtn" hidden data-t="signIn"></button>
+    <button class="signin" id="signInBtn" hidden data-t="signInShort"></button>
     <div id="userBtn"></div>
     </div>
   </header>
@@ -285,7 +336,7 @@
     <div class="figs">
       <img src="figures/eer_by_run.png" alt="Equal error rate by test set, runs A/B/C" loading="lazy">
       <img src="figures/false_alarms_by_run.png" alt="Real voices wrongly flagged, runs A/B/C" loading="lazy">
-      <img class="wide" src="figures/confusion_matrices.png" alt="Confusion matrices for runs A/B/C" loading="lazy">
+      <div class="wide scrollx"><img src="figures/confusion_matrices.png" alt="Confusion matrices for runs A/B/C" loading="lazy"></div>
     </div>
   </div>
 
@@ -327,6 +378,7 @@ const T = {
 for (const [l, extra] of Object.entries({"en": {"navCheck": "Check", "navHistory": "History", "navDash": "Dashboard", "signIn": "Sign in", "privacy": "Without an account nothing is kept. Signed in, the audio and its result are saved to your private history; you can delete them anytime.", "histNote": "Your private history: each voice note and its result. Only you can see it, and you can delete any item.", "histEmpty": "No checks yet. Analyse a voice note and it will appear here.", "needLogin": "Sign in to keep a private history of your checks.", "dashNote": "Your checks, and how our model performs on held-out test data.", "kTotal": "voice notes checked", "kClone": "likely clones", "kReal": "likely real", "kUnsure": "uncertain", "perfTitle": "Model performance · held-out test (10,122 clips)", "m1": "accuracy on unseen voices", "m2": "EER on unseen generators (ElevenLabs, OpenAI…)", "m3": "EER on our fresh clones", "m4": "real voices wrongly flagged", "figTitle": "Before vs after · runs A / B / C", "saved": "✓ Saved to your history", "notSaved": "Sign in to save this check to your history", "play": "Play", "delBtn": "Delete"}, "fr": {"navCheck": "Vérifier", "navHistory": "Historique", "navDash": "Tableau de bord", "signIn": "Se connecter", "privacy": "Sans compte, rien n'est conservé. Connecté, l'audio et son résultat sont enregistrés dans votre historique privé ; vous pouvez les supprimer à tout moment.", "histNote": "Votre historique privé : chaque vocal et son résultat. Vous seul le voyez, et vous pouvez supprimer chaque élément.", "histEmpty": "Aucune vérification. Analysez un vocal et il apparaîtra ici.", "needLogin": "Connectez-vous pour garder un historique privé de vos vérifications.", "dashNote": "Vos vérifications, et les performances de notre modèle sur des données de test indépendantes.", "kTotal": "vocaux vérifiés", "kClone": "clones probables", "kReal": "probablement réels", "kUnsure": "incertains", "perfTitle": "Performances du modèle · test indépendant (10 122 extraits)", "m1": "précision sur des voix inconnues", "m2": "EER sur des générateurs inconnus (ElevenLabs, OpenAI…)", "m3": "EER sur nos nouveaux clones", "m4": "vraies voix signalées à tort", "figTitle": "Avant / après · runs A / B / C", "saved": "✓ Enregistré dans votre historique", "notSaved": "Connectez-vous pour enregistrer cette vérification", "play": "Écouter", "delBtn": "Supprimer"}, "ar": {"navCheck": "تحقّق", "navHistory": "السجل", "navDash": "لوحة المتابعة", "signIn": "تسجيل الدخول", "privacy": "بدون حساب لا نحتفظ بأي شيء. عند تسجيل الدخول يُحفظ الصوت ونتيجته في سجلك الخاص، ويمكنك حذفهما في أي وقت.", "histNote": "سجلك الخاص: كل رسالة صوتية ونتيجتها. أنت وحدك تراه، ويمكنك حذف أي عنصر.", "histEmpty": "لا توجد عمليات تحقّق بعد. حلّل رسالة صوتية وستظهر هنا.", "needLogin": "سجّل الدخول لتحتفظ بسجل خاص لعمليات التحقّق.", "dashNote": "عمليات التحقّق الخاصة بك، وأداء نموذجنا على بيانات اختبار مستقلة.", "kTotal": "رسالة تم فحصها", "kClone": "مستنسخة على الأرجح", "kReal": "حقيقية على الأرجح", "kUnsure": "غير مؤكدة", "perfTitle": "أداء النموذج · اختبار مستقل (10٬122 مقطعًا)", "m1": "دقة على أصوات جديدة", "m2": "EER على مولّدات لم يرها (ElevenLabs، OpenAI…)", "m3": "EER على مستنسخاتنا الجديدة", "m4": "أصوات حقيقية صُنّفت خطأً", "figTitle": "قبل / بعد · التجارب A / B / C", "saved": "✓ حُفظ في سجلك", "notSaved": "سجّل الدخول لحفظ هذا الفحص في سجلك", "play": "استماع", "delBtn": "حذف"}})) Object.assign(T[l], extra);
 for (const [l, extra] of Object.entries({"en": {"gateTitle": "Sign in to check a voice note", "gateText": "Each check is saved with its audio in your private history. You can delete it anytime.", "privacy": "Your voice notes and results are saved in your private history. Only you can see them, and you can delete them anytime.", "login_required": "Please sign in first."}, "fr": {"gateTitle": "Connectez-vous pour vérifier un vocal", "gateText": "Chaque vérification est enregistrée avec son audio dans votre historique privé. Vous pouvez la supprimer à tout moment.", "privacy": "Vos vocaux et leurs résultats sont enregistrés dans votre historique privé. Vous seul les voyez, et vous pouvez les supprimer à tout moment.", "login_required": "Connectez-vous d'abord."}, "ar": {"gateTitle": "سجّل الدخول لفحص رسالة صوتية", "gateText": "يُحفظ كل فحص مع صوته في سجلك الخاص، ويمكنك حذفه في أي وقت.", "privacy": "تُحفظ رسائلك الصوتية ونتائجها في سجلك الخاص. أنت وحدك تراها، ويمكنك حذفها في أي وقت.", "login_required": "يرجى تسجيل الدخول أولًا."}})) { Object.assign(T[l], extra); T[l].errors.login_required = extra.login_required; }
 for (const [l, e] of Object.entries({"en": {"history_full": "Your history is full (100 checks or 300 MB). Delete old checks to continue.", "storage_full": "Storage is temporarily full. Try again later.", "busy": "The server is busy. Try again in a moment.", "too_many_requests": "Too many checks. Wait a minute (limit: 10 per minute, 150 per day)."}, "fr": {"history_full": "Votre historique est plein (100 vérifications ou 300 Mo). Supprimez-en pour continuer.", "storage_full": "Stockage temporairement plein. Réessayez plus tard.", "busy": "Serveur occupé. Réessayez dans un instant.", "too_many_requests": "Trop de vérifications. Patientez une minute (limite : 10 par minute, 150 par jour)."}, "ar": {"history_full": "سجلك ممتلئ (100 فحص أو 300 ميغابايت). احذف فحوصات قديمة للمتابعة.", "storage_full": "التخزين ممتلئ مؤقتًا. حاول لاحقًا.", "busy": "الخادم مشغول. حاول بعد لحظة.", "too_many_requests": "فحوصات كثيرة. انتظر دقيقة (الحد: 10 في الدقيقة و150 في اليوم)."}})) Object.assign(T[l].errors, e);
+for (const [l, v] of Object.entries({ en: "Sign in", fr: "Connexion", ar: "دخول" })) T[l].signInShort = v;
 const ICON = { likely_real: "✓", likely_clone: "!", uncertain: "?" };
 const params = new URLSearchParams(location.search);
 const API = "";                                  // always same-origin: never let a link redirect uploads or tokens
@@ -378,7 +430,7 @@ function render(r, animate = true) {
     return b;
   }));
   $("axisEnd").textContent = r.duration.toFixed(1) + "s";
-  $("tips").replaceChildren(...r.tips.map((t) => { const li = document.createElement("li"); li.append(span(t)); return li; }));
+  $("tips").replaceChildren(...r.tips.map((t) => { const li = document.createElement("li"); const s = span(t); s.dir = "auto"; li.append(s); return li; }));
   $("src").textContent = T[lang].tipsBy[r.tips_source] || "";
   $("savedNote").textContent = MOCK ? "" : r.saved_id ? T[lang].saved : T[lang].notSaved;
   $("result").classList.add("show");
@@ -539,7 +591,7 @@ async function renderHistory() {
     const row = document.createElement("div"); row.className = "hrow";
     const chip = span(T[lang][it.verdict]); chip.className = "chip " + it.verdict;
     const mid = document.createElement("div");
-    const nm = document.createElement("div"); nm.className = "hname"; nm.textContent = it.filename;
+    const nm = document.createElement("div"); nm.className = "hname"; nm.dir = "auto"; nm.textContent = it.filename;
     const sub = document.createElement("div"); sub.className = "hsub";
     sub.textContent = `${new Date(it.created_at * 1000).toLocaleString(lang === "ar" ? "ar-MA" : lang)} · ${it.duration.toFixed(1)} s · ${it.model}`;
     mid.append(nm, sub);
