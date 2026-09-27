@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ink: #07080A; --ink-2: #0E1014; --card: rgba(20, 22, 27, 0.78); --line: rgba(255, 255, 255, 0.08);
+    --ink: #07080A; --ink-2: #0E1014; --card: rgba(16, 18, 22, 0.9); --line: rgba(255, 255, 255, 0.08);
     --line-2: rgba(255, 255, 255, 0.16); --text: #F3F1EA; --muted: #9A978E;
     --accent: #D4FF3A;            /* signal lime: brand accent, never a verdict colour */
     --real: #2EE59D; --clone: #FF4D5E; --unsure: #FFB020;
@@ -28,9 +28,14 @@
   @keyframes drift { to { transform: translate3d(4%, -3%, 0) rotate(4deg); } }
   /* background art: Higgsfield (Z Image) — real (lime) waveform fracturing into a clone (red) */
   .art { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: url("bg/waveform.jpg") center 62% / cover no-repeat;
-    opacity: .42; mask-image: linear-gradient(to bottom, transparent 0%, #000 35%, #000 80%, transparent 100%);
+    opacity: .34; mask-image: linear-gradient(to bottom, transparent 0%, #000 35%, #000 80%, transparent 100%);
     -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 35%, #000 80%, transparent 100%); animation: breathe 14s ease-in-out infinite alternate; }
-  @keyframes breathe { to { transform: scale(1.06); opacity: .5; } }
+  @keyframes breathe { to { transform: scale(1.06); opacity: .4; } }
+  /* scrim: darkens the art behind the text columns so copy stays readable */
+  .scrim { position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background: linear-gradient(90deg, rgba(7,8,10,.88) 0%, rgba(7,8,10,.62) 38%, rgba(7,8,10,.35) 62%, rgba(7,8,10,.55) 100%),
+                radial-gradient(60% 55% at 28% 38%, rgba(7,8,10,.55), transparent 70%); }
+  [dir="rtl"] .scrim { transform: scaleX(-1); }
   @media (max-width: 760px) { .art { background-position: 35% 70%; opacity: .3; } }
   .grain { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .07; mix-blend-mode: overlay;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
@@ -48,9 +53,10 @@
   .kicker { font-family: var(--mono); font-size: .74rem; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); }
   h1 { font-family: var(--display); font-weight: 800; font-size: clamp(2.3rem, 6.2vw, 4.4rem); line-height: .98; letter-spacing: -.035em; margin: 14px 0 16px; }
   h1 em { font-style: normal; color: var(--clone); }
-  .lede { color: var(--muted); font-size: 1.05rem; max-width: 34ch; margin: 0; }
+  .intro h1, .intro .kicker, .intro .lede { text-shadow: 0 2px 24px rgba(0,0,0,.9), 0 1px 3px rgba(0,0,0,.8); }
+  .lede { color: #C9C5BB; font-size: 1.05rem; max-width: 34ch; margin: 0; }
   .proof { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
-  .pill { font-family: var(--mono); font-size: .76rem; color: var(--text); border: 1px solid var(--line-2); border-radius: 999px; padding: 7px 12px; background: rgba(255,255,255,.03); }
+  .pill { font-family: var(--mono); font-size: .76rem; color: var(--text); border: 1px solid var(--line-2); border-radius: 999px; padding: 7px 12px; background: rgba(7,8,10,.78); backdrop-filter: blur(6px); }
   .pill b { color: var(--accent); font-weight: 500; }
   .panel { background: var(--card); backdrop-filter: blur(14px); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 20px;
     box-shadow: 0 40px 90px -40px rgba(0,0,0,.9); }
@@ -110,6 +116,7 @@
   ol.tips li::before { content: counter(t); width: 26px; height: 26px; border-radius: 8px; background: rgba(212,255,58,.12); color: var(--accent); font: 600 .8rem var(--mono); display: grid; place-items: center; }
   .src { font-family: var(--mono); font-size: .7rem; color: var(--muted); margin-top: 14px; }
   .again { margin-top: 14px; background: none; border: 1px solid var(--line-2); color: var(--text); border-radius: 999px; padding: 9px 16px; font: 600 .85rem var(--body); cursor: pointer; }
+  footer { text-shadow: 0 1px 8px rgba(0,0,0,.9); }
   footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: space-between; }
   .views { display: flex; gap: 3px; background: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
   .gate { display: grid; gap: 14px; justify-items: center; text-align: center; padding: 30px 16px; border: 1.5px dashed var(--line-2); border-radius: var(--r-md); }
@@ -159,7 +166,7 @@
 </style>
 </head>
 <body>
-<div class="art"></div><div class="glow"></div><div class="grain"></div>
+<div class="art"></div><div class="scrim"></div><div class="glow"></div><div class="grain"></div>
 <main>
   <header>
     <div class="brand"><i></i>Real <b>or</b> Clone?</div>
