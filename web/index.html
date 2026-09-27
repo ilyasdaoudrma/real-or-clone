@@ -157,7 +157,7 @@ function render(r) {
   $("verdictText").textContent = T[lang][r.verdict];
   $("meter").style.width = Math.round(r.p_fake * 100) + "%";
   $("conf").textContent = `${T[lang].confidence} ${Math.round(r.confidence * 100)}%`;
-  $("dur").textContent = `${r.duration.toFixed(1)}s · ${r.latency_ms} ms · ${r.model}`;
+  $("dur").textContent = `${r.duration.toFixed(1)}s · ${r.latency_ms} ms · ${r.model_label || r.model}`;
   const tl = $("timeline");
   tl.replaceChildren(...r.windows.map((w) => {
     const b = document.createElement("b");

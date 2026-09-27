@@ -19,14 +19,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from openai import OpenAI
+import torch
 
 from augment.voicenote import SR, load
 from train.detector import Detector
 
 load_dotenv()
-CKPT = os.environ.get("CKPT", "checkpoints/run_c")          # default model
-# every run that exists is loaded, so the app can compare "before" (a) and "after" (b, c)
-RUN_LABELS = {"run_a": "A: public data", "run_b": "B: + our clones", "run_c": "C: + varied real voices"}
+CKPT = os.environ.get("CKPT", "checkpoints/run_c")          # our fine-tuned model
+BASE_MODEL = "facebook/wav2vec2-xls-r-300m"
+# The app compares the model BEFORE fine-tuning (XLS-R 300M, untrained real/fake head, fixed seed so it is
+# reproducible) with our fine-tuned model AFTER, on the same voice note.
+MODEL_LABELS = {"base": "XLS-R 300M · before fine-tuning", "ours": "Fine-tuned · ours"}
 MAX_BYTES = 10 * 1024 * 1024
 MIN_S, MAX_S = 1.0, 60.0
 CLONE_AT, REAL_AT = 0.65, 0.35          # between the two -> "uncertain"
@@ -48,9 +51,9 @@ LANG_NAME = {"en": "English", "fr": "French", "ar": "Modern Standard Arabic"}
 
 app = FastAPI(title="Real or Clone?")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"], allow_headers=["*"])
-detectors = {name: Detector(str(Path(CKPT).parent / name)) for name in RUN_LABELS
-             if (Path(CKPT).parent / name / "config.json").exists()}
-DEFAULT = Path(CKPT).name
+torch.manual_seed(0)
+detectors = {"base": Detector(BASE_MODEL), "ours": Detector(CKPT)}
+DEFAULT = "ours"
 LLM_MODEL = os.environ.get("LLM_MODEL", "openai/gpt-oss-120b")
 llm = OpenAI(base_url=os.environ.get("LLM_BASE_URL", "https://api.groq.com/openai/v1"),
              api_key=os.environ["LLM_API_KEY"], timeout=8.0) if os.environ.get("LLM_API_KEY") else None
@@ -98,7 +101,7 @@ def rate_limited(ip: str) -> bool:
 
 @app.get("/health")
 def health() -> dict:
-    return {"ok": True, "model": DEFAULT, "models": {k: RUN_LABELS[k] for k in detectors},
+    return {"ok": True, "model": DEFAULT, "checkpoint": Path(CKPT).name, "models": MODEL_LABELS,
             "device": detectors[DEFAULT].device, "tips": LLM_MODEL if llm else "template"}
 
 
@@ -134,7 +137,8 @@ async def analyze(request: Request, file: UploadFile = File(...), lang: str = Fo
             "duration": res["duration"], "windows": res["windows"]}
     tips, source = write_tips({k: core[k] for k in ("verdict", "p_fake", "confidence")}, lang)
     return {**core, "tips": tips, "tips_source": source,
-            "latency_ms": round((time.perf_counter() - t0) * 1000), "model": model}
+            "latency_ms": round((time.perf_counter() - t0) * 1000),
+            "model": model, "model_label": MODEL_LABELS[model]}
 
 
 web_dir = Path(__file__).resolve().parent.parent / "web"

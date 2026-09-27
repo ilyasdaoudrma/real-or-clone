@@ -1,6 +1,6 @@
 # API contract (web app codes against this; mock in web/mock_response.json)
 
-`POST /analyze` — multipart form: `file` (any audio: ogg/opus/m4a/mp3/wav/webm, max 60 s), `lang` (`ar` | `fr` | `en`, language of the TIPS), optional `model` (`run_a` | `run_b` | `run_c`, default `run_c`)
+`POST /analyze` — multipart form: `file` (any audio: ogg/opus/m4a/mp3/wav/webm, max 60 s), `lang` (`ar` | `fr` | `en`, language of the TIPS), optional `model` (`base` = XLS-R 300M before fine-tuning | `ours` = fine-tuned, default `ours`)
 
 Response 200:
 ```json
@@ -17,4 +17,4 @@ Response 200:
 }
 ```
 Errors: 400 `{"error": "too_short" | "too_long" | "bad_audio"}`. Audio is deleted right after scoring; nothing is stored.
-`GET /health` -> `{"ok": true, "model": "run_c", "models": {"run_a": "A: public data", ...}, "device": "cuda"}`
+`GET /health` -> `{"ok": true, "model": "ours", "checkpoint": "run_c", "models": {"base": "...", "ours": "..."}, "device": "cuda"}`

@@ -66,7 +66,7 @@ Real test clips: 4,120 · clone test clips: 6,002
 | Run B — + our clones | 70.8% | 67.1% | 99.8% | 0.802 | 71.3% | 1,182 / 2,938 / 13 / 5,989 |
 | Run C — + varied real voices | 96.1% | 95.2% | 98.4% | 0.968 | 7.2% | 3,825 / 295 / 98 / 5,904 |
 
-The live app lets the user pick run A, B or C, to compare the baseline and our improved models on the same voice note.
+The live app lets the user switch between XLS-R 300M *before* fine-tuning (untrained real/fake head, fixed seed) and our fine-tuned model (run C) on the same voice note, to show what the fine-tuning adds.
 
 **Failure mode we found and fixed:** run (a) learned a shortcut — "sounds like FLEURS = real, anything else = fake".
 Spot check on unseen clips: FLEURS real 0/10 flagged, MLAAD fake 10/10 caught, but **In-the-Wild REAL 8/10 wrongly flagged**
