@@ -13,7 +13,7 @@
 
 | False alarms on real speech (threshold at EER) | Run (a) | Run (b) |
 |---|---|---|
-| Hausa / Wolof / Yoruba / Amharic (FLEURS) | TODO | TODO |
+| Real English + French (FLEURS test) | TODO | TODO |
 
 Latency per 10-s note: TODO · GPU hours used: TODO · Cost: TODO
 

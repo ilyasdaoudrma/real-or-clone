@@ -27,7 +27,6 @@ DATA_DIR = Path(os.environ.get("DATA_DIR", "~/roc_data")).expanduser()
 HF_TOKEN = os.environ.get("HF_TOKEN") or None
 
 FLEURS_TRAIN_LANGS = ["fr_fr", "en_us"]          # real speech for training
-FLEURS_FAIRNESS_LANGS = ["ha_ng", "wo_sn", "yo_ng", "am_et"]  # false-alarm test only
 MLAAD_LANGS = {"fr": 150, "en": 120}          # files per generator
 SEED = 13
 
@@ -40,7 +39,6 @@ def _extract_tar(path: Path, dest: Path) -> None:
 
 def download_fleurs(tiny: bool) -> None:
     jobs = [(lang, split) for lang in FLEURS_TRAIN_LANGS for split in ("train", "dev", "test")]
-    jobs += [(lang, "test") for lang in FLEURS_FAIRNESS_LANGS]
     if tiny:
         jobs = [("fr_fr", "dev")]
     for lang, split in tqdm(jobs, desc="fleurs"):
