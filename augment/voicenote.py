@@ -13,12 +13,14 @@ import argparse
 import csv
 import hashlib
 import os
+import random
 import subprocess
 from multiprocessing import Pool
 from pathlib import Path
 
 import numpy as np
 import soundfile as sf
+from scipy.signal import fftconvolve
 from dotenv import load_dotenv
 from tqdm import tqdm
 
@@ -32,7 +34,7 @@ CONDITIONS = ("clean", "opus", "phone", "noise", "reverb")
 
 def _ffmpeg(args: list[str], data: bytes | None = None) -> bytes:
     # stdin must never be the terminal: a backgrounded ffmpeg that reads the tty gets stopped (hangs forever)
-    res = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", *args],
+    res = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-threads", "1", *args],
                          input=data if data is not None else b"", capture_output=True, check=True)
     return res.stdout
 
@@ -74,7 +76,7 @@ def add_reverb(x: np.ndarray, rng: np.random.Generator) -> np.ndarray:
     t = np.arange(int(rt60 * SR)) / SR
     rir = rng.standard_normal(len(t)) * np.exp(-6.9 * t / rt60)
     rir[0] = 1.0
-    y = np.convolve(x, rir / np.abs(rir).sum() * 4)[: len(x)]
+    y = fftconvolve(x, rir / np.abs(rir).sum() * 4)[: len(x)]  # np.convolve took ~6 s per clip
     return y
 
 
@@ -110,11 +112,20 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
+    ap.add_argument("--max-test-per-source", type=int, default=4000, help="eval never needs more")
     args = ap.parse_args()
     with open(DATA_DIR / "manifest.csv", encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
     if args.limit:
         rows = rows[:: max(1, len(rows) // args.limit)][: args.limit]
+    rng = random.Random(0)
+    keep, test_by_src = [r for r in rows if r["split"] != "test"], {}
+    for r in rows:
+        if r["split"] == "test":
+            test_by_src.setdefault(r["source"], []).append(r)
+    for src_rows in test_by_src.values():
+        keep += rng.sample(src_rows, min(args.max_test_per_source, len(src_rows)))
+    rows = keep
     (DATA_DIR / "vn").mkdir(parents=True, exist_ok=True)
     with Pool(args.workers) as pool:
         done = [r for r in tqdm(pool.imap_unordered(process, rows, chunksize=16), total=len(rows)) if r]
