@@ -4,162 +4,263 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Real or Clone?</title>
+<meta name="description" content="Check if a voice note is a real voice or an AI clone: verdict, suspicious seconds and safety tips in Arabic, French and English.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --paper: #f4f1ea; --card: #fffdf8; --ink: #1b1a17; --muted: #6b665c; --line: #e2dccf;
-    --real: #1f7a4d; --real-bg: #e3f2e9; --clone: #c2361f; --clone-bg: #fbe6e1;
-    --unsure: #a86a00; --unsure-bg: #fbf0d9;
-    --radius-lg: 22px; --radius-sm: 10px;
-    --font: "IBM Plex Sans Arabic", system-ui, sans-serif; --mono: "IBM Plex Mono", monospace;
+    --ink: #07080A; --ink-2: #0E1014; --card: rgba(20, 22, 27, 0.78); --line: rgba(255, 255, 255, 0.08);
+    --line-2: rgba(255, 255, 255, 0.16); --text: #F3F1EA; --muted: #9A978E;
+    --accent: #D4FF3A;            /* signal lime: brand accent, never a verdict colour */
+    --real: #2EE59D; --clone: #FF4D5E; --unsure: #FFB020;
+    --r-lg: 26px; --r-md: 16px;
+    --display: "Bricolage Grotesque", "IBM Plex Sans Arabic", system-ui, sans-serif;
+    --body: "IBM Plex Sans Arabic", system-ui, sans-serif; --mono: "JetBrains Mono", monospace;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font); line-height: 1.5; }
-  main { max-width: 520px; margin: 0 auto; padding: 20px 16px 48px; }
+  html, body { margin: 0; background: var(--ink); color: var(--text); font-family: var(--body); line-height: 1.5; }
+  body { min-height: 100vh; overflow-x: hidden; }
+  .glow { position: fixed; inset: -20%; z-index: 0; pointer-events: none;
+    background: radial-gradient(40% 35% at 20% 20%, rgba(212,255,58,.10), transparent 70%),
+                radial-gradient(35% 30% at 85% 30%, rgba(255,77,94,.10), transparent 70%),
+                radial-gradient(40% 40% at 60% 90%, rgba(46,229,157,.08), transparent 70%);
+    animation: drift 24s ease-in-out infinite alternate; }
+  @keyframes drift { to { transform: translate3d(4%, -3%, 0) rotate(4deg); } }
+  .grain { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .07; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  main { position: relative; z-index: 2; max-width: 1080px; margin: 0 auto; padding: 22px 16px 60px; }
   header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-  .brand { font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em; }
-  .brand span { color: var(--clone); }
-  .langs { display: flex; gap: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
-  .langs button { border: 0; background: none; font: 600 0.8rem var(--font); padding: 6px 11px; border-radius: 999px; cursor: pointer; color: var(--muted); }
-  .langs button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
-  h1 { font-size: clamp(1.9rem, 7vw, 2.5rem); line-height: 1.1; margin: 28px 0 8px; letter-spacing: -0.02em; }
-  .lede { color: var(--muted); margin: 0 0 24px; }
-  .input { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 22px; display: grid; gap: 14px; box-shadow: 0 1px 0 var(--line), 0 12px 30px -18px rgba(27,26,23,.25); }
-  .rec { display: flex; align-items: center; gap: 14px; width: 100%; border: 0; border-radius: 16px; padding: 16px; background: var(--ink); color: var(--paper); font: 600 1rem var(--font); cursor: pointer; transition: transform .15s ease; }
-  .rec:active { transform: scale(.98); }
-  .rec:focus-visible, .file:focus-within, .langs button:focus-visible { outline: 3px solid var(--unsure); outline-offset: 2px; }
-  .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--clone); flex: none; }
-  .rec.on .dot { animation: pulse 1s infinite; }
-  @keyframes pulse { 50% { opacity: .25; } }
-  .file { display: block; text-align: center; border: 1.5px dashed var(--line); border-radius: 16px; padding: 14px; cursor: pointer; color: var(--muted); font-weight: 600; }
-  .file input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-  .privacy { font-size: .8rem; color: var(--muted); margin: 0; }
-  .models { display: grid; gap: 6px; }
-  .models span { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
-  .models div { display: flex; flex-wrap: wrap; gap: 6px; }
-  .models button { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 6px 12px; font: 600 .78rem var(--font); cursor: pointer; color: var(--ink); }
-  .models button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-  .status { margin: 20px 4px 0; min-height: 1.5em; color: var(--muted); font-weight: 600; }
-  .result { margin-top: 18px; display: none; gap: 14px; }
-  .result.show { display: grid; animation: rise .35s ease; }
-  @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
-  .verdict { border-radius: var(--radius-lg); padding: 22px; }
-  .verdict.likely_real { background: var(--real-bg); color: var(--real); }
-  .verdict.likely_clone { background: var(--clone-bg); color: var(--clone); }
-  .verdict.uncertain { background: var(--unsure-bg); color: var(--unsure); }
-  .verdict .label { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; opacity: .8; }
-  .verdict .big { font-size: 2rem; font-weight: 700; line-height: 1.15; margin: 4px 0 10px; color: var(--ink); }
-  .meter { height: 8px; background: rgba(27,26,23,.1); border-radius: 99px; overflow: hidden; }
-  .meter i { display: block; height: 100%; background: currentColor; border-radius: 99px; transition: width .6s ease; }
-  .meta { display: flex; justify-content: space-between; font: 500 .8rem var(--mono); margin-top: 8px; }
-  .panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 18px 20px; }
-  .panel h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 12px; }
-  .timeline { position: relative; height: 54px; display: flex; align-items: flex-end; gap: 3px; direction: ltr; }
-  .timeline b { flex: 1; border-radius: 6px 6px 2px 2px; min-height: 6px; }
-  .axis { display: flex; justify-content: space-between; font: 500 .72rem var(--mono); color: var(--muted); margin-top: 6px; direction: ltr; }
-  ol { margin: 0; padding-inline-start: 1.2em; display: grid; gap: 8px; }
-  .src { font: 500 .72rem var(--mono); color: var(--muted); margin-top: 10px; }
-  .err { color: var(--clone); }
-  footer { margin-top: 32px; font-size: .78rem; color: var(--muted); }
+  .brand { font-family: var(--display); font-weight: 800; font-size: 1.15rem; letter-spacing: -.01em; display: flex; align-items: center; gap: 10px; }
+  .brand i { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 18px var(--accent); }
+  .brand b { color: var(--clone); font-weight: 800; }
+  .seg { display: flex; gap: 3px; background: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
+  .seg button { border: 0; background: none; color: var(--muted); font: 600 .82rem var(--body); padding: 7px 13px; border-radius: 999px; cursor: pointer; transition: color .2s, background .2s; }
+  .seg button[aria-pressed="true"] { background: var(--text); color: var(--ink); }
+  .seg button:focus-visible, .tab:focus-visible, .cta:focus-visible, .drop:focus-within, .again:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .hero { display: grid; grid-template-columns: 1.05fr 1fr; gap: 40px; align-items: start; margin-top: 44px; }
+  @media (max-width: 860px) { .hero { grid-template-columns: 1fr; gap: 26px; margin-top: 28px; } }
+  .kicker { font-family: var(--mono); font-size: .74rem; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); }
+  h1 { font-family: var(--display); font-weight: 800; font-size: clamp(2.3rem, 6.2vw, 4.4rem); line-height: .98; letter-spacing: -.035em; margin: 14px 0 16px; }
+  h1 em { font-style: normal; color: var(--clone); }
+  .lede { color: var(--muted); font-size: 1.05rem; max-width: 34ch; margin: 0; }
+  .proof { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+  .pill { font-family: var(--mono); font-size: .76rem; color: var(--text); border: 1px solid var(--line-2); border-radius: 999px; padding: 7px 12px; background: rgba(255,255,255,.03); }
+  .pill b { color: var(--accent); font-weight: 500; }
+  .panel { background: var(--card); backdrop-filter: blur(14px); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 20px;
+    box-shadow: 0 40px 90px -40px rgba(0,0,0,.9); }
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--ink-2); border-radius: 14px; padding: 5px; }
+  .tab { border: 0; background: none; color: var(--muted); font: 600 .92rem var(--body); padding: 11px; border-radius: 10px; cursor: pointer; display: flex; gap: 8px; justify-content: center; align-items: center; }
+  .tab[aria-selected="true"] { background: var(--card); color: var(--text); box-shadow: inset 0 0 0 1px var(--line-2); }
+  .pane { margin-top: 14px; }
+  .drop { position: relative; display: grid; place-items: center; text-align: center; gap: 6px; border: 1.5px dashed var(--line-2); border-radius: var(--r-md); padding: 34px 16px; cursor: pointer; transition: border-color .2s, background .2s; }
+  .drop:hover, .drop.over { border-color: var(--accent); background: rgba(212,255,58,.04); }
+  .drop input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .drop strong { font-size: 1rem; }
+  .drop small { color: var(--muted); font-family: var(--mono); font-size: .72rem; }
+  .cta { width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; border: 0; border-radius: var(--r-md); padding: 22px; cursor: pointer;
+    background: var(--text); color: var(--ink); font: 700 1.02rem var(--body); transition: transform .12s; }
+  .cta:active { transform: scale(.98); }
+  .cta .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--clone); }
+  .cta.on { background: var(--clone); color: #fff; }
+  .cta.on .dot { background: #fff; animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity: .2; } }
+  .timer { font-family: var(--mono); color: var(--muted); text-align: center; margin-top: 10px; font-size: .85rem; min-height: 1.2em; }
+  .models { margin-top: 16px; display: grid; gap: 8px; }
+  .models > span, .label { font-family: var(--mono); font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .models .seg { border-radius: 14px; }
+  .models .seg button { flex: 1; border-radius: 10px; font-size: .78rem; }
+  .privacy { color: var(--muted); font-size: .8rem; margin: 14px 2px 0; display: flex; gap: 8px; }
+  .stages { display: none; margin-top: 18px; gap: 8px; }
+  .stages.show { display: grid; }
+  .stage { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: .9rem; }
+  .stage i { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--line-2); }
+  .stage.done { color: var(--text); } .stage.done i { background: var(--accent); border-color: var(--accent); }
+  .stage.active i { border-color: var(--accent); animation: blink .8s infinite; }
+  .status { margin: 14px 2px 0; min-height: 1.4em; font-weight: 600; }
+  .status.err { color: var(--clone); }
+  .result { display: none; margin-top: 36px; gap: 16px; grid-template-columns: 1.1fr 1fr; }
+  .result.show { display: grid; }
+  @media (max-width: 860px) { .result { grid-template-columns: 1fr; } }
+  .verdict { border-radius: var(--r-lg); padding: 26px; border: 1px solid; }
+  .verdict.likely_real { background: rgba(46,229,157,.07); border-color: rgba(46,229,157,.35); --v: var(--real); }
+  .verdict.likely_clone { background: rgba(255,77,94,.08); border-color: rgba(255,77,94,.4); --v: var(--clone); }
+  .verdict.uncertain { background: rgba(255,176,32,.07); border-color: rgba(255,176,32,.35); --v: var(--unsure); }
+  .vhead { display: flex; align-items: center; gap: 16px; }
+  .vicon { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--v) 18%, transparent); color: var(--v); font-size: 1.6rem; font-weight: 800; flex: none; }
+  .vbig { font-family: var(--display); font-weight: 800; font-size: clamp(1.7rem, 4vw, 2.4rem); line-height: 1.05; letter-spacing: -.02em; }
+  .bars { margin-top: 22px; display: grid; gap: 12px; }
+  .bar .row { display: flex; justify-content: space-between; font-size: .82rem; color: var(--muted); margin-bottom: 5px; }
+  .bar .row b { font-family: var(--mono); font-weight: 500; color: var(--text); }
+  .track { height: 9px; background: rgba(255,255,255,.07); border-radius: 99px; overflow: hidden; }
+  .fill { height: 100%; width: 0; border-radius: 99px; transform-origin: left; transition: width .9s cubic-bezier(.16,1,.3,1); }
+  [dir="rtl"] .fill { transform-origin: right; }
+  .meta { margin-top: 16px; font-family: var(--mono); font-size: .74rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  .timeline { display: flex; align-items: flex-end; gap: 4px; height: 90px; direction: ltr; }
+  .timeline b { flex: 1; border-radius: 7px 7px 3px 3px; min-height: 8px; transform-origin: bottom; }
+  .axis { display: flex; justify-content: space-between; font-family: var(--mono); font-size: .7rem; color: var(--muted); margin-top: 8px; direction: ltr; }
+  .panel h2 { font-family: var(--mono); font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 0 14px; font-weight: 500; }
+  ol.tips { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; counter-reset: t; }
+  ol.tips li { counter-increment: t; display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; }
+  ol.tips li::before { content: counter(t); width: 26px; height: 26px; border-radius: 8px; background: rgba(212,255,58,.12); color: var(--accent); font: 600 .8rem var(--mono); display: grid; place-items: center; }
+  .src { font-family: var(--mono); font-size: .7rem; color: var(--muted); margin-top: 14px; }
+  .again { margin-top: 14px; background: none; border: 1px solid var(--line-2); color: var(--text); border-radius: 999px; padding: 9px 16px; font: 600 .85rem var(--body); cursor: pointer; }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: space-between; }
+  [dir="rtl"] h1, [dir="rtl"] .vbig { font-family: var(--body); letter-spacing: 0; line-height: 1.2; }
+  @media (prefers-reduced-motion: reduce) { .glow, .cta.on .dot, .stage.active i { animation: none; } }
 </style>
 </head>
 <body>
+<div class="glow"></div><div class="grain"></div>
 <main>
   <header>
-    <div class="brand">Real <span>or</span> Clone?</div>
-    <nav class="langs" aria-label="Language">
+    <div class="brand"><i></i>Real <b>or</b> Clone?</div>
+    <nav class="seg" aria-label="Language">
       <button data-lang="ar">ع</button><button data-lang="fr">FR</button><button data-lang="en" aria-pressed="true">EN</button>
     </nav>
   </header>
 
-  <h1 data-t="title"></h1>
-  <p class="lede" data-t="lede"></p>
+  <section class="hero">
+    <div class="intro">
+      <div class="kicker" data-t="kicker"></div>
+      <h1 data-t-html="title"></h1>
+      <p class="lede" data-t="lede"></p>
+      <div class="proof">
+        <span class="pill"><b>96%</b> <span data-t="p1"></span></span>
+        <span class="pill"><b>&lt;1 s</b> <span data-t="p2"></span></span>
+        <span class="pill"><b>0</b> <span data-t="p3"></span></span>
+      </div>
+    </div>
 
-  <section class="input" aria-label="Voice note">
-    <button class="rec" id="rec"><span class="dot"></span><span id="recLabel" data-t="record"></span></button>
-    <label class="file"><input type="file" id="file" accept="audio/*,.ogg,.opus,.m4a,.mp3,.wav,.webm"><span data-t="upload"></span></label>
-    <div class="models" id="models" hidden><span data-t="modelLabel"></span><div id="modelBtns"></div></div>
-    <p class="privacy" data-t="privacy"></p>
+    <div class="panel" id="panel">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" id="tabUp" aria-selected="true" data-pane="up">⤒ <span data-t="upload"></span></button>
+        <button class="tab" role="tab" id="tabRec" aria-selected="false" data-pane="rec">● <span data-t="record"></span></button>
+      </div>
+      <div class="pane" id="paneUp">
+        <label class="drop" id="drop">
+          <input type="file" id="file" accept="audio/*,.ogg,.opus,.m4a,.mp3,.wav,.webm">
+          <strong data-t="drop"></strong>
+          <small>WhatsApp · ogg · opus · m4a · mp3 · wav · webm · ≤ 60 s</small>
+        </label>
+      </div>
+      <div class="pane" id="paneRec" hidden>
+        <button class="cta" id="rec"><span class="dot"></span><span id="recLabel"></span></button>
+        <div class="timer" id="timer"></div>
+      </div>
+      <div class="models" id="models" hidden><span data-t="modelLabel"></span><div class="seg" id="modelBtns"></div></div>
+      <div class="stages" id="stages"></div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <p class="privacy">🔒 <span data-t="privacy"></span></p>
+    </div>
   </section>
 
-  <p class="status" id="status" role="status" aria-live="polite"></p>
-
-  <section class="result" id="result">
+  <section class="result" id="result" aria-live="polite">
     <div class="verdict" id="verdict">
-      <div class="label" data-t="verdictLabel"></div>
-      <div class="big" id="verdictText"></div>
-      <div class="meter"><i id="meter"></i></div>
-      <div class="meta"><span id="conf"></span><span id="dur"></span></div>
+      <div class="vhead">
+        <div class="vicon" id="vicon"></div>
+        <div>
+          <div class="label" data-t="verdictLabel"></div>
+          <div class="vbig" id="verdictText"></div>
+        </div>
+      </div>
+      <div class="bars">
+        <div class="bar"><div class="row"><span data-t="pReal"></span><b id="pRealV"></b></div><div class="track"><div class="fill" id="pRealF" style="background:var(--real)"></div></div></div>
+        <div class="bar"><div class="row"><span data-t="pClone"></span><b id="pCloneV"></b></div><div class="track"><div class="fill" id="pCloneF" style="background:var(--clone)"></div></div></div>
+      </div>
+      <div class="meta" id="meta"></div>
     </div>
-    <div class="panel">
-      <h2 data-t="timelineTitle"></h2>
-      <div class="timeline" id="timeline"></div>
-      <div class="axis"><span>0s</span><span id="axisEnd"></span></div>
-    </div>
-    <div class="panel">
-      <h2 data-t="tipsTitle"></h2>
-      <ol id="tips"></ol>
-      <div class="src" id="src"></div>
+    <div style="display:grid;gap:16px">
+      <div class="panel">
+        <h2 data-t="timelineTitle"></h2>
+        <div class="timeline" id="timeline"></div>
+        <div class="axis"><span>0s</span><span id="axisEnd"></span></div>
+      </div>
+      <div class="panel">
+        <h2 data-t="tipsTitle"></h2>
+        <ol class="tips" id="tips"></ol>
+        <div class="src" id="src"></div>
+        <button class="again" id="again" data-t="again"></button>
+      </div>
     </div>
   </section>
 
-  <footer data-t="footer"></footer>
+  <footer><span data-t="footer"></span><span>XLS-R 300M fine-tuned · NVIDIA Brev · GOMYCODE 2026</span></footer>
 </main>
 <script>
 const T = {
-  en: { title: "Is this voice note really them?", lede: "Scammers clone a voice from 3 seconds of audio. Check a voice note before you send any money.",
-        record: "Record the voice note", stop: "Stop and analyse", upload: "or upload an audio file",
-        privacy: "Your audio is analysed and deleted immediately. Nothing is stored.",
-        analysing: "Analysing…", verdictLabel: "Verdict", likely_real: "Likely real", likely_clone: "Likely a clone", uncertain: "Can't tell for sure",
-        modelLabel: "Model", confidence: "confidence", timelineTitle: "Suspicious seconds", tipsTitle: "What to do now",
+  en: { kicker: "AI voice-clone detector", title: "Is this voice note <em>really</em> them?", lede: "Scammers clone a voice from 3 seconds of audio. Check a voice note before you send any money.",
+        p1: "accuracy on unseen voices", p2: "per voice note", p3: "audio stored",
+        upload: "Upload", record: "Record", drop: "Drop a voice note or tap to choose", recStart: "Start recording", recStop: "Stop and analyse",
+        modelLabel: "Model", privacy: "Your audio is analysed and deleted immediately. Nothing is stored.",
+        stages: ["Sending audio", "Voice-note preprocessing", "Model inference", "Writing safety tips"],
+        verdictLabel: "Verdict", likely_real: "Likely real", likely_clone: "Likely a clone", uncertain: "Can't tell for sure",
+        pReal: "Real voice", pClone: "AI clone", confidence: "confidence", timelineTitle: "Suspicious seconds", tipsTitle: "What to do now", again: "Check another voice note",
         footer: "An AI can be wrong. Always confirm by calling back on a number you already know.",
-        errors: { too_short: "Too short: send at least 1 second.", too_long: "Too long: max 60 seconds.", bad_audio: "We couldn't read this audio file.", network: "The server is unreachable. Try again.", mic: "Microphone access was refused." },
-        tipsBy: { llm: "tips written by an AI from the verdict", template: "standard safety tips" } },
-  fr: { title: "Ce vocal, c'est vraiment lui ?", lede: "Les arnaqueurs clonent une voix avec 3 secondes d'audio. Vérifiez un message vocal avant d'envoyer de l'argent.",
-        record: "Enregistrer le vocal", stop: "Arrêter et analyser", upload: "ou importer un fichier audio",
-        privacy: "Votre audio est analysé puis supprimé immédiatement. Rien n'est conservé.",
-        analysing: "Analyse en cours…", verdictLabel: "Verdict", likely_real: "Probablement réel", likely_clone: "Probablement un clone", uncertain: "Impossible de trancher",
-        modelLabel: "Modèle", confidence: "confiance", timelineTitle: "Secondes suspectes", tipsTitle: "Que faire maintenant",
+        errors: { too_short: "Too short: send at least 1 second.", too_long: "Too long: max 60 seconds.", bad_audio: "We couldn't read this audio file.", too_many_requests: "Too many requests, wait a minute.", network: "The server is unreachable. Try again.", mic: "Microphone access was refused." },
+        tipsBy: { llm: "tips written by an AI from the verdict only", template: "standard safety tips" } },
+  fr: { kicker: "Détecteur de clonage vocal", title: "Ce vocal, c'est <em>vraiment</em> lui ?", lede: "Les arnaqueurs clonent une voix avec 3 secondes d'audio. Vérifiez un message vocal avant d'envoyer de l'argent.",
+        p1: "de précision sur des voix inconnues", p2: "par vocal", p3: "audio conservé",
+        upload: "Importer", record: "Enregistrer", drop: "Déposez un vocal ou touchez pour choisir", recStart: "Commencer l'enregistrement", recStop: "Arrêter et analyser",
+        modelLabel: "Modèle", privacy: "Votre audio est analysé puis supprimé immédiatement. Rien n'est conservé.",
+        stages: ["Envoi de l'audio", "Prétraitement vocal", "Inférence du modèle", "Rédaction des conseils"],
+        verdictLabel: "Verdict", likely_real: "Probablement réel", likely_clone: "Probablement un clone", uncertain: "Impossible de trancher",
+        pReal: "Voix réelle", pClone: "Clone IA", confidence: "confiance", timelineTitle: "Secondes suspectes", tipsTitle: "Que faire maintenant", again: "Vérifier un autre vocal",
         footer: "Une IA peut se tromper. Confirmez toujours en rappelant un numéro que vous connaissez déjà.",
-        errors: { too_short: "Trop court : au moins 1 seconde.", too_long: "Trop long : 60 secondes maximum.", bad_audio: "Impossible de lire ce fichier audio.", network: "Serveur injoignable. Réessayez.", mic: "Accès au micro refusé." },
-        tipsBy: { llm: "conseils rédigés par une IA à partir du verdict", template: "conseils de sécurité standards" } },
-  ar: { title: "هل هذه الرسالة الصوتية منه فعلًا؟", lede: "يستنسخ المحتالون الصوت من ثلاث ثوانٍ فقط. تحقّق من الرسالة الصوتية قبل أن ترسل أي مال.",
-        record: "سجّل الرسالة الصوتية", stop: "أوقف وحلّل", upload: "أو ارفع ملفًا صوتيًا",
-        privacy: "يُحلَّل الصوت ثم يُحذف فورًا. لا نحتفظ بأي شيء.",
-        analysing: "جارٍ التحليل…", verdictLabel: "النتيجة", likely_real: "على الأرجح حقيقي", likely_clone: "على الأرجح مستنسخ", uncertain: "لا يمكن الجزم",
-        modelLabel: "النموذج", confidence: "الثقة", timelineTitle: "الثواني المشبوهة", tipsTitle: "ماذا تفعل الآن",
+        errors: { too_short: "Trop court : au moins 1 seconde.", too_long: "Trop long : 60 secondes maximum.", bad_audio: "Impossible de lire ce fichier audio.", too_many_requests: "Trop de requêtes, patientez une minute.", network: "Serveur injoignable. Réessayez.", mic: "Accès au micro refusé." },
+        tipsBy: { llm: "conseils rédigés par une IA à partir du verdict seul", template: "conseils de sécurité standards" } },
+  ar: { kicker: "كاشف استنساخ الصوت", title: "هل هذه الرسالة الصوتية <em>منه</em> فعلًا؟", lede: "يستنسخ المحتالون الصوت من ثلاث ثوانٍ فقط. تحقّق من الرسالة الصوتية قبل أن ترسل أي مال.",
+        p1: "دقة على أصوات جديدة", p2: "لكل رسالة", p3: "صوت محفوظ",
+        upload: "رفع ملف", record: "تسجيل", drop: "أسقط رسالة صوتية هنا أو اضغط للاختيار", recStart: "ابدأ التسجيل", recStop: "أوقف وحلّل",
+        modelLabel: "النموذج", privacy: "يُحلَّل الصوت ثم يُحذف فورًا. لا نحتفظ بأي شيء.",
+        stages: ["إرسال الصوت", "تهيئة الصوت", "تشغيل النموذج", "كتابة النصائح"],
+        verdictLabel: "النتيجة", likely_real: "على الأرجح حقيقي", likely_clone: "على الأرجح مستنسخ", uncertain: "لا يمكن الجزم",
+        pReal: "صوت حقيقي", pClone: "استنساخ بالذكاء الاصطناعي", confidence: "الثقة", timelineTitle: "الثواني المشبوهة", tipsTitle: "ماذا تفعل الآن", again: "تحقّق من رسالة أخرى",
         footer: "قد يخطئ الذكاء الاصطناعي. تأكّد دائمًا بالاتصال على رقم تعرفه مسبقًا.",
-        errors: { too_short: "قصير جدًا: ثانية واحدة على الأقل.", too_long: "طويل جدًا: 60 ثانية كحد أقصى.", bad_audio: "تعذّرت قراءة الملف الصوتي.", network: "تعذّر الوصول إلى الخادم. حاول مجددًا.", mic: "تم رفض الوصول إلى الميكروفون." },
-        tipsBy: { llm: "نصائح كتبها ذكاء اصطناعي انطلاقًا من النتيجة", template: "نصائح أمان عامة" } },
+        errors: { too_short: "قصير جدًا: ثانية واحدة على الأقل.", too_long: "طويل جدًا: 60 ثانية كحد أقصى.", bad_audio: "تعذّرت قراءة الملف الصوتي.", too_many_requests: "طلبات كثيرة، انتظر دقيقة.", network: "تعذّر الوصول إلى الخادم. حاول مجددًا.", mic: "تم رفض الوصول إلى الميكروفون." },
+        tipsBy: { llm: "نصائح كتبها ذكاء اصطناعي انطلاقًا من النتيجة فقط", template: "نصائح أمان عامة" } },
 };
+const ICON = { likely_real: "✓", likely_clone: "!", uncertain: "?" };
 const params = new URLSearchParams(location.search);
 const API = params.get("api") || "";            // same origin by default
 const MOCK = params.has("mock");
-let lang = "en", last = null, recorder = null, chunks = [], model = "";
+let lang = "en", last = null, recorder = null, chunks = [], model = "", recStart = 0, recTimer = null, stageTimer = null;
 const $ = (id) => document.getElementById(id);
+
+// Motion (Framer Motion's vanilla engine). Everything still works if the CDN is blocked.
+let motion = null;
+const anim = (sel, kf, opts) => (motion ? motion.animate(sel, kf, opts) : null);
+import("https://cdn.jsdelivr.net/npm/motion@11.18.2/+esm").then((m) => {
+  motion = m;
+  anim(".intro > *", { opacity: [0, 1], y: [24, 0] }, { delay: motion.stagger(0.08), duration: 0.7, ease: [0.16, 1, 0.3, 1] });
+  anim("#panel", { opacity: [0, 1], y: [30, 0], scale: [0.97, 1] }, { delay: 0.25, duration: 0.8, ease: [0.16, 1, 0.3, 1] });
+}).catch(() => {});
 
 function setLang(l) {
   lang = l;
   document.documentElement.lang = l;
   document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
   document.querySelectorAll("[data-t]").forEach((el) => { el.textContent = T[l][el.dataset.t]; });
-  document.querySelectorAll(".langs button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.lang === l));
-  $("recLabel").textContent = recorder ? T[l].stop : T[l].record;
-  if (last) render(last);
+  document.querySelectorAll("[data-t-html]").forEach((el) => { el.innerHTML = T[l][el.dataset.tHtml]; }); // static strings only
+  document.querySelectorAll("header .seg button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.lang === l));
+  $("recLabel").textContent = recorder ? T[l].recStop : T[l].recStart;
+  if (last) render(last, false);
 }
 
 function colorFor(p) { return p >= 0.65 ? "var(--clone)" : p <= 0.35 ? "var(--real)" : "var(--unsure)"; }
+function span(text) { const s = document.createElement("span"); s.textContent = text; return s; }
 
-function render(r) {
+function render(r, animate = true) {
   last = r;
   $("verdict").className = "verdict " + r.verdict;
+  $("vicon").textContent = ICON[r.verdict];
   $("verdictText").textContent = T[lang][r.verdict];
-  $("meter").style.width = Math.round(r.p_fake * 100) + "%";
-  $("conf").textContent = `${T[lang].confidence} ${Math.round(r.confidence * 100)}%`;
-  $("dur").textContent = `${r.duration.toFixed(1)}s · ${r.latency_ms} ms · ${r.model_label || r.model}`;
-  const tl = $("timeline");
-  tl.replaceChildren(...r.windows.map((w) => {
+  const pc = Math.round(r.p_fake * 1000) / 10, pr = Math.round((100 - pc) * 10) / 10;
+  $("pRealV").textContent = pr + "%"; $("pCloneV").textContent = pc + "%";
+  $("pRealF").style.width = "0"; $("pCloneF").style.width = "0";
+  requestAnimationFrame(() => requestAnimationFrame(() => { $("pRealF").style.width = pr + "%"; $("pCloneF").style.width = pc + "%"; }));
+  $("meta").replaceChildren(...[`${T[lang].confidence} ${Math.round(r.confidence * 100)}%`, `${r.duration.toFixed(1)} s`,
+    `${r.latency_ms} ms`, r.model_label || r.model || ""].map(span));
+  $("timeline").replaceChildren(...r.windows.map((w) => {
     const b = document.createElement("b");
     b.style.height = Math.max(8, w.p_fake * 100) + "%";
     b.style.background = colorFor(w.p_fake);
@@ -167,16 +268,35 @@ function render(r) {
     return b;
   }));
   $("axisEnd").textContent = r.duration.toFixed(1) + "s";
-  $("tips").replaceChildren(...r.tips.map((t) => { const li = document.createElement("li"); li.textContent = t; return li; }));
+  $("tips").replaceChildren(...r.tips.map((t) => { const li = document.createElement("li"); li.append(span(t)); return li; }));
   $("src").textContent = T[lang].tipsBy[r.tips_source] || "";
   $("result").classList.add("show");
+  if (!animate) return;
+  $("result").scrollIntoView({ behavior: "smooth", block: "start" });
+  if (!motion) return;
+  anim("#verdict", { opacity: [0, 1], scale: [0.94, 1] }, { type: "spring", stiffness: 260, damping: 20 });
+  anim("#vicon", { scale: [0, 1.15, 1], rotate: [-20, 0] }, { delay: 0.15, duration: 0.5 });
+  anim("#timeline b", { scaleY: [0, 1] }, { delay: motion.stagger(0.05, { startDelay: 0.3 }), duration: 0.5 });
+  anim("#tips li", { opacity: [0, 1], x: [lang === "ar" ? -16 : 16, 0] }, { delay: motion.stagger(0.12, { startDelay: 0.5 }) });
 }
 
 function status(msg, isErr = false) { $("status").textContent = msg; $("status").classList.toggle("err", isErr); }
 
+function showStages(on) {
+  const box = $("stages");
+  clearInterval(stageTimer);
+  if (!on) { box.classList.remove("show"); return; }
+  box.replaceChildren(...T[lang].stages.map((s) => { const d = document.createElement("div"); d.className = "stage"; d.append(document.createElement("i"), s); return d; }));
+  box.classList.add("show");
+  let i = 0;
+  const step = () => { [...box.children].forEach((c, k) => { c.className = "stage" + (k < i ? " done" : k === i ? " active" : ""); }); i = Math.min(i + 1, 3); };
+  step(); stageTimer = setInterval(step, 350);
+}
+
 async function analyse(blob, name) {
-  status(T[lang].analysing);
+  status("");
   $("result").classList.remove("show");
+  showStages(true);
   try {
     let r;
     if (MOCK) {
@@ -187,13 +307,22 @@ async function analyse(blob, name) {
       fd.append("lang", lang);
       if (model) fd.append("model", model);
       const res = await fetch(API + "/analyze", { method: "POST", body: fd });
-      r = await res.json();
-      if (!res.ok) { status(T[lang].errors[r.error] || T[lang].errors.network, true); return; }
+      r = await res.json().catch(() => ({ error: "network" }));
+      if (!res.ok) { showStages(false); status(T[lang].errors[r.error || r.detail] || T[lang].errors.network, true); return; }
     }
-    status("");
+    clearInterval(stageTimer);
+    [...$("stages").children].forEach((c) => { c.className = "stage done"; });
+    setTimeout(() => showStages(false), 500);
     render(r);
-  } catch { status(T[lang].errors.network, true); }
+  } catch { showStages(false); status(T[lang].errors.network, true); }
 }
+
+function selectTab(pane) {
+  $("tabUp").setAttribute("aria-selected", pane === "up"); $("tabRec").setAttribute("aria-selected", pane === "rec");
+  $("paneUp").hidden = pane !== "up"; $("paneRec").hidden = pane !== "rec";
+  anim(pane === "up" ? "#paneUp" : "#paneRec", { opacity: [0, 1], y: [8, 0] }, { duration: 0.3 });
+}
+document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => selectTab(t.dataset.pane)));
 
 $("rec").addEventListener("click", async () => {
   if (recorder) { recorder.stop(); return; }
@@ -206,19 +335,34 @@ $("rec").addEventListener("click", async () => {
       stream.getTracks().forEach((t) => t.stop());
       const type = recorder.mimeType || "audio/webm";
       recorder = null;
+      clearInterval(recTimer); $("timer").textContent = "";
       $("rec").classList.remove("on");
-      $("recLabel").textContent = T[lang].record;
+      $("recLabel").textContent = T[lang].recStart;
       analyse(new Blob(chunks, { type }), type.includes("mp4") ? "note.m4a" : "note.webm");
     };
     recorder.start();
+    recStart = Date.now();
+    recTimer = setInterval(() => {
+      const s = Math.floor((Date.now() - recStart) / 1000);
+      $("timer").textContent = `0:${String(Math.min(s, 59)).padStart(2, "0")} / 1:00`;
+      if (s >= 60 && recorder) recorder.stop();
+    }, 250);
     $("rec").classList.add("on");
-    $("recLabel").textContent = T[lang].stop;
+    $("recLabel").textContent = T[lang].recStop;
   } catch { status(T[lang].errors.mic, true); }
 });
+
 $("file").addEventListener("change", (e) => { const f = e.target.files[0]; if (f) analyse(f, f.name); e.target.value = ""; });
-document.querySelectorAll(".langs button").forEach((b) => b.addEventListener("click", () => setLang(b.dataset.lang)));
+const drop = $("drop");
+["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", (e) => { const f = e.dataTransfer.files[0]; if (f) analyse(f, f.name); });
+
+$("again").addEventListener("click", () => { $("result").classList.remove("show"); last = null; window.scrollTo({ top: 0, behavior: "smooth" }); });
+document.querySelectorAll("header .seg button").forEach((b) => b.addEventListener("click", () => setLang(b.dataset.lang)));
 setLang("en");
-// Model picker: compare the baseline (run A) with our improved runs on the same voice note.
+
+// Model picker: XLS-R before fine-tuning vs our fine-tuned model, on the same voice note.
 fetch(API + "/health").then((r) => r.json()).then((h) => {
   if (!h.models || Object.keys(h.models).length < 2) return;
   model = h.model;
