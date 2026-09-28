@@ -37,7 +37,7 @@ Real or Clone? checks a WhatsApp voice note in under a second and tells you — 
 
 <table>
   <tr>
-    <td width="62%"><img src="docs/shots/2_result.png" alt="Verdict, suspicious seconds and safety tips"></td>
+    <td width="62%"><img src="docs/shots/1_home.png" alt="Landing page over the looping real-vs-clone waveform"></td>
     <td width="38%"><img src="docs/shots/5_mobile.png" alt="Mobile view"></td>
   </tr>
 </table>
@@ -51,8 +51,12 @@ Real or Clone? checks a WhatsApp voice note in under a second and tells you — 
 
 <table>
   <tr>
+    <td><img src="docs/shots/2_result.png" alt="Verdict, suspicious seconds and safety tips"></td>
     <td><img src="docs/shots/3_result_ar.png" alt="Arabic interface"></td>
-    <td><img src="docs/shots/4_dashboard.png" alt="Dashboard with model performance"></td>
+  </tr>
+  <tr>
+    <td width="62%"><img src="docs/shots/4_dashboard.png" alt="Dashboard with model performance"></td>
+    <td width="38%"><img src="docs/shots/6_mobile_ar.png" alt="Arabic result on a phone"></td>
   </tr>
 </table>
 

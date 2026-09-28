@@ -63,7 +63,7 @@ def slide(title, kicker, n):
     glow = box(s, 9.5 - n * 0.35, -1.5 + (n % 2) * 0.6, 5, 5, RGBColor(0x1B, 0x10, 0x14), "!!glow", MSO_SHAPE.OVAL)
     glow.shadow.inherit = False
     text(s, 0.6, 0.72, 8, 0.4, kicker.upper(), 12, LIME, True, "!!kicker")
-    text(s, 0.6, 1.05, 12, 1.1, title, 36, TEXT, True, "!!title")
+    text(s, 0.6, 1.05, 12.2, 1.1, title, 32, TEXT, True, "!!title")
     text(s, 10.6, 6.95, 2.6, 0.4, [[("Real ", TEXT), ("or", RED), (" Clone?", TEXT)]], 12, bold=True, name="!!brand")
     s._element.append(etree.fromstring(MORPH))
     return s
@@ -145,9 +145,9 @@ text(s, 0.6, 6.3, 12, 0.6, "Accuracy 70.8% → 70.8% → 96.1% · F1 0.798 → 0
 
 # 8 app
 s = slide("The app: EN / FR / AR, mobile-first, private history", "Product", 7)
-pic(s, shots / "4_dashboard.png", 0.6, 2.1, h=4.9, name="!!shot")
-pic(s, shots / "3_result_ar.png", 6.6, 2.1, h=4.9)
-pic(s, shots / "5_mobile.png", 11.0, 2.1, h=4.9)
+pic(s, shots / "1_home.png", 0.6, 2.1, h=4.6, name="!!shot")
+pic(s, shots / "5_mobile.png", 8.3, 2.1, h=4.6)
+pic(s, shots / "6_mobile_ar.png", 10.7, 2.1, h=4.6)
 
 # 9 responsible AI
 s = slide("Responsible AI, cost and limits", "Honest by design", 8)
