@@ -1,39 +1,58 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=IBM+Plex+Sans+Arabic:wght@500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<!-- README banner (1280x480) and GitHub social preview (1280x640), same look as the app. Render: python docs/assets/render_banner.py -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&family=Instrument+Serif:ital@1&family=IBM+Plex+Sans+Arabic:wght@500&display=swap" rel="stylesheet">
 <style>
-  html, body { margin: 0; }
-  body { width: var(--w); height: var(--h); background: #07080A; color: #F3F1EA; font-family: "IBM Plex Sans Arabic", sans-serif; overflow: hidden; position: relative; }
-  .art { position: absolute; inset: 0; background: url("../../web/bg/waveform.jpg") center 58% / cover; opacity: .55; }
-  .scrim { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7,8,10,.94) 0%, rgba(7,8,10,.72) 42%, rgba(7,8,10,.2) 75%, rgba(7,8,10,.5) 100%); }
-  .grain { position: absolute; inset: 0; opacity: .08; mix-blend-mode: overlay;
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100vw; height: 100vh; overflow: hidden; background: #000; color: #fff; }
+  body { font-family: "Inter", "IBM Plex Sans Arabic", sans-serif; -webkit-font-smoothing: antialiased; position: relative; }
+  /* frame 0 of the app's background loop */
+  .art { position: absolute; inset: 0; background: url("../../web/bg/wave-poster.jpg") center / cover no-repeat; }
+  .art::after { content: ""; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 46% 58% at 50% 50%, rgba(0,0,0,.82), rgba(0,0,0,.55) 55%, rgba(0,0,0,0) 100%),
+                linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 70%, rgba(0,0,0,.85) 100%); }
+  .grain { position: absolute; inset: 0; opacity: .05;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
-  .content { position: absolute; left: 72px; top: 50%; transform: translateY(-50%); }
-  .kicker { font-family: "JetBrains Mono", monospace; font-size: 18px; letter-spacing: .22em; color: #D4FF3A; display: flex; align-items: center; gap: 14px; }
-  .kicker i { width: 12px; height: 12px; border-radius: 50%; background: #D4FF3A; box-shadow: 0 0 18px #D4FF3A; }
-  h1 { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: var(--big); letter-spacing: -.04em; line-height: .95; margin: 18px 0 10px; }
-  h1 b { color: #FF4D5E; }
-  .ar { font-size: calc(var(--big) * .34); color: #B9B5AB; direction: rtl; text-align: left; }
-  .tag { margin-top: 22px; font-size: 22px; color: #C9C5BB; max-width: 620px; line-height: 1.4; }
-  .chips { display: flex; gap: 10px; margin-top: 26px; }
-  .chip { font-family: "JetBrains Mono", monospace; font-size: 15px; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 8px 14px; background: rgba(7,8,10,.7); }
-  .chip b { color: #D4FF3A; font-weight: 500; }
+  .top { position: absolute; left: 40px; right: 40px; top: 5.5vh; display: flex; justify-content: space-between; align-items: center; }
+  .logo { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 600; letter-spacing: -.03em; }
+  .logo svg { width: 24px; height: 24px; }
+  .logo span span { font-weight: 400; color: #9a9a9a; }
+  .event { font-size: 13.5px; color: #9a9a9a; letter-spacing: -.01em; }
+  .copy { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    text-shadow: 0 2px 20px rgba(0,0,0,.85), 0 1px 3px rgba(0,0,0,.7); padding-bottom: 5vh; }
+  .badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 5px; font-size: 13.5px; color: #f2f2f2; text-shadow: none;
+    background: linear-gradient(90deg, #7d7d7d 0%, #2a2a2a 52%, #0a0a0a 100%); }
+  .badge svg { width: 16px; height: 18px; filter: drop-shadow(0 0 3px rgba(255,255,255,.45)); }
+  h1 { margin-top: 2.2vh; font-size: 21vh; font-weight: 500; letter-spacing: -.05em; line-height: 1; }
+  h1 em { font-family: "Instrument Serif", serif; font-style: italic; font-weight: 400; letter-spacing: -.02em; padding: 0 .06em; margin: 0 -.02em; text-shadow: none;
+    background: linear-gradient(90deg, #FF453A, #FF9F0A); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .ar { margin-top: 1.6vh; font-family: "IBM Plex Sans Arabic", sans-serif; font-size: 5.2vh; color: #b5b5b5; direction: rtl; }
+  .stats { position: absolute; left: 0; right: 0; bottom: 6vh; display: flex; justify-content: center; gap: 44px; color: #d8d8d8; font-size: 15px; letter-spacing: -.015em; }
+  .stat { display: inline-flex; align-items: center; gap: 12px; }
+  .stat b { color: #fff; font-weight: 600; }
+  .stat svg { width: 20px; height: 20px; } .stat svg.wide { width: 38px; height: 21px; }
 </style>
 </head>
 <body>
-  <div class="art"></div><div class="scrim"></div><div class="grain"></div>
-  <div class="content">
-    <div class="kicker"><i></i>AI VOICE-CLONE SCAM DETECTOR</div>
-    <h1>Real <b>or</b> Clone?</h1>
-    <div class="ar">حقيقي أم مستنسخ؟</div>
-    <div class="tag">Is that urgent voice note really them? Get a verdict in under a second — before you send any money.</div>
-    <div class="chips">
-      <span class="chip"><b>96.1%</b> accuracy on unseen voices</span>
-      <span class="chip"><b>2.4%</b> EER on unseen generators</span>
-      <span class="chip"><b>AR · FR · EN</b></span>
+  <div class="art"></div><div class="grain"></div>
+  <div class="top">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="1.6" y="9" width="2.8" height="6" rx="1.4" fill="#fff"/><rect x="6.1" y="5" width="2.8" height="14" rx="1.4" fill="#fff"/><rect x="10.6" y="1.6" width="2.8" height="20.8" rx="1.4" fill="#fff"/><rect x="15.1" y="6" width="2.8" height="12" rx="1.4" fill="#FF453A"/><rect x="19.6" y="9.4" width="2.8" height="5.2" rx="1.4" fill="#FF453A"/></svg>
+      <span>Real <span>or</span> Clone?</span>
     </div>
+    <div class="event">GOMYCODE × NVIDIA · Come Build with AI · 2026</div>
+  </div>
+  <div class="copy">
+    <div class="badge"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M12 2.6C12.55 2.6 12.88 3.15 13.08 4.7c.62 4.7 1.52 5.6 6.22 6.22 1.55.2 2.1.53 2.1 1.08s-.55.88-2.1 1.08c-4.7.62-5.6 1.52-6.22 6.22-.2 1.55-.53 2.1-1.08 2.1s-.88-.55-1.08-2.1c-.62-4.7-1.52-5.6-6.22-6.22C3.15 12.88 2.6 12.55 2.6 12s.55-.88 2.1-1.08c4.7-.62 5.6-1.52 6.22-6.22C11.12 3.15 11.45 2.6 12 2.6Z"/></svg>AI voice-clone scam detector</div>
+    <h1>Real <em>or</em> Clone?</h1>
+    <div class="ar">حقيقي أم مستنسخ؟</div>
+  </div>
+  <div class="stats">
+    <div class="stat"><svg viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="gReal" x1="3" y1="2" x2="14" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#3a3a3a" stop-opacity=".7"/></linearGradient><linearGradient id="gClone" x1="13" y1="2" x2="24" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FF453A" stop-opacity=".4"/><stop offset="1" stop-color="#FF453A"/></linearGradient></defs><rect x="3.4" y="2.6" width="7.2" height="18.8" rx="3.6" fill="url(#gReal)"/><rect x="13.4" y="2.6" width="7.2" height="18.8" rx="3.6" fill="url(#gClone)"/><rect x="9.2" y="10.9" width="5.6" height="2.2" rx="1.1" fill="#4a4a4a"/></svg><span><b>96.1%</b> accuracy on unseen voices</span></div>
+    <div class="stat"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.4" y="2.4" width="19.2" height="19.2" rx="6.2" fill="#fff"/><path d="M13.4 5.6 8.3 13.1h3.7l-1.4 5.3 5.1-7.5H12l1.4-5.3Z" fill="#111"/></svg><span><b>2.4%</b> EER on unseen generators</span></div>
+    <div class="stat"><svg class="wide" viewBox="0 0 40 22" aria-hidden="true"><circle cx="10.2" cy="11" r="9.2" fill="#2b2b2b" stroke="#000" stroke-width="1.2"/><text x="10.2" y="14.6" text-anchor="middle" font-size="10" font-weight="700" fill="#fff" font-family="IBM Plex Sans Arabic, sans-serif">ع</text><circle cx="20.2" cy="11" r="9.2" fill="#fff" stroke="#000" stroke-width="1.2"/><text x="20.2" y="13.6" text-anchor="middle" font-size="7" font-weight="700" fill="#111" font-family="Inter, sans-serif">FR</text><circle cx="30.2" cy="11" r="9.2" fill="#FF9F0A" stroke="#000" stroke-width="1.2"/><text x="30.2" y="13.6" text-anchor="middle" font-size="7" font-weight="700" fill="#fff" font-family="Inter, sans-serif">EN</text></svg><span><b>AR · FR · EN</b> safety tips</span></div>
   </div>
 </body>
 </html>
