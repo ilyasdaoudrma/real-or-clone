@@ -3,7 +3,7 @@
 > **Update (after judging):** the NVIDIA Brev instance used for judging has been shut down, so the live link below no longer works. The app now runs on your own computer — see *Run it on your computer* in the [README](README.md); the model is on Hugging Face ([`IlyasDaoud/real-or-clone-xlsr`](https://huggingface.co/IlyasDaoud/real-or-clone-xlsr)).
 
 GOMYCODE "Come Build with AI" hackathon — Morocco — 27 Sept 2026
-Team: Ilyas Daoud (lead, ML), Oualid Karmoun (data, testing, slides), Ayoub El Mouhib (web app, demo video)
+Team: Ilyas Daoud (lead, ML), Oualid Karmoun (data, testing, slides), Ayoub El Mouhib (web app, demo video), Othman Mertah (early planning)
 
 - **Prototype URL:** https://real-or-clone-9m7lxdq0i.gobrev.dev (live on the Brev L40S, model run c)
 - **90-second demo video:** TODO

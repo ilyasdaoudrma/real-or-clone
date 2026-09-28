@@ -88,7 +88,7 @@ shots, figs = D / "shots", D / "figures"
 s = slide("", "GOMYCODE · Come Build with AI · Morocco · 27.09.2026", 0)
 text(s, 0.6, 1.9, 12, 1.6, [[("Real ", TEXT), ("or", RED), (" Clone?", TEXT)]], 80, bold=True, name="!!hero")
 text(s, 0.6, 3.45, 12, 0.8, "حقيقي أم مستنسخ؟ — detecting AI voice-clone scams in voice notes", 24, MUTED)
-text(s, 0.6, 5.2, 12, 1.2, ["Ilyas Daoud · Oualid Karmoun · Ayoub El Mouhib",
+text(s, 0.6, 5.2, 12, 1.2, ["Ilyas Daoud · Oualid Karmoun · Ayoub El Mouhib · Othman Mertah",
                             [("Run it: ", MUTED), ("free & open source, on your own computer", LIME)],
                             [("Code: ", MUTED), ("github.com/ilyasdaoudrma/real-or-clone", LIME)]], 16)
 
