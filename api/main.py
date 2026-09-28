@@ -29,6 +29,8 @@ from train.detector import Detector
 
 load_dotenv()
 CKPT = os.environ.get("CKPT", "checkpoints/run_c")          # our fine-tuned model
+if not Path(CKPT).exists():  # no local copy: download our published weights from Hugging Face (1.2 GB, once)
+    CKPT = "IlyasDaoud/real-or-clone-xlsr"
 BASE_MODEL = "facebook/wav2vec2-xls-r-300m"
 # The app compares the model BEFORE fine-tuning (XLS-R 300M, untrained real/fake head, fixed seed so it is
 # reproducible) with our fine-tuned model AFTER, on the same voice note.

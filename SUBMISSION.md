@@ -1,5 +1,7 @@
 # Submission — Real or Clone? (حقيقي أم مستنسخ؟)
 
+> **Update (after judging):** the NVIDIA Brev instance used for judging has been shut down, so the live link below no longer works. The app now runs on your own computer — see *Run it on your computer* in the [README](README.md); the model is on Hugging Face ([`IlyasDaoud/real-or-clone-xlsr`](https://huggingface.co/IlyasDaoud/real-or-clone-xlsr)).
+
 GOMYCODE "Come Build with AI" hackathon — Morocco — 27 Sept 2026
 Team: Ilyas Daoud (lead, ML), Oualid Karmoun (data, testing, slides), Ayoub El Mouhib (web app, demo video)
 

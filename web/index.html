@@ -410,8 +410,8 @@
           <span><b dir="ltr">96.1%</b> <span data-t="p1"></span></span>
         </div>
         <div class="stat appear appear--stat" style="--d:1.28s">
-          <svg class="stat-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.4" y="2.4" width="19.2" height="19.2" rx="6.2" fill="#fff"/><path d="M13.4 5.6 8.3 13.1h3.7l-1.4 5.3 5.1-7.5H12l1.4-5.3Z" fill="#111"/></svg>
-          <span><b dir="ltr">&lt;1 s</b> <span data-t="p2"></span></span>
+          <svg class="stat-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.4" y="2.4" width="19.2" height="19.2" rx="6.2" fill="#fff"/><rect x="7.6" y="10.8" width="8.8" height="6.8" rx="1.6" fill="#111"/><path d="M9.6 10.8V9a2.4 2.4 0 0 1 4.8 0v1.8" fill="none" stroke="#111" stroke-width="1.7"/></svg>
+          <span><b data-t="p2b"></b> <span data-t="p2"></span></span>
         </div>
         <div class="stat appear appear--stat" style="--d:1.44s">
           <svg class="stat-icon-wide" viewBox="0 0 40 22" aria-hidden="true"><circle cx="10.2" cy="11" r="9.2" fill="#2b2b2b" stroke="#000" stroke-width="1.2"/><text x="10.2" y="14.6" text-anchor="middle" font-size="10" font-weight="700" fill="#fff" font-family="IBM Plex Sans Arabic, sans-serif">ع</text><circle cx="20.2" cy="11" r="9.2" fill="#fff" stroke="#000" stroke-width="1.2"/><text x="20.2" y="13.6" text-anchor="middle" font-size="7" font-weight="700" fill="#111" font-family="Inter, sans-serif">FR</text><circle cx="30.2" cy="11" r="9.2" fill="#FF9F0A" stroke="#000" stroke-width="1.2"/><text x="30.2" y="13.6" text-anchor="middle" font-size="7" font-weight="700" fill="#fff" font-family="Inter, sans-serif">EN</text></svg>
@@ -523,7 +523,7 @@
 const T = {
   en: { kicker: "AI voice-clone detector", title1: "Is this voice note", title2: "<em>really</em> them?", lede: "Scammers clone a voice from 3 seconds of audio. Check a voice note before you send any money.",
         ctaCheck: "Check a voice note", ctaResults: "See our results",
-        p1: "accuracy on unseen voices", p2: "per voice note", p3: "safety tips",
+        p1: "accuracy on unseen voices", p2b: "Local", p2: "your audio stays on your computer", p3: "safety tips",
         upload: "Upload", record: "Record", drop: "Drop a voice note or tap to choose", recStart: "Start recording", recStop: "Stop and analyse",
         modelLabel: "Model", privacy: "Your audio is analysed and deleted immediately. Nothing is stored.",
         stages: ["Sending audio", "Voice-note preprocessing", "Model inference", "Writing safety tips"],
@@ -534,7 +534,7 @@ const T = {
         tipsBy: { llm: "tips written by an AI from the verdict only", template: "standard safety tips" } },
   fr: { kicker: "Détecteur de clonage vocal", title1: "Ce vocal, c'est", title2: "<em>vraiment</em> lui ?", lede: "Les arnaqueurs clonent une voix avec 3 secondes d'audio. Vérifiez un message vocal avant d'envoyer de l'argent.",
         ctaCheck: "Vérifier un vocal", ctaResults: "Voir nos résultats",
-        p1: "de précision sur des voix inconnues", p2: "par vocal", p3: "conseils de sécurité",
+        p1: "de précision sur des voix inconnues", p2b: "Local", p2: "votre audio reste sur votre ordinateur", p3: "conseils de sécurité",
         upload: "Importer", record: "Enregistrer", drop: "Déposez un vocal ou touchez pour choisir", recStart: "Commencer l'enregistrement", recStop: "Arrêter et analyser",
         modelLabel: "Modèle", privacy: "Votre audio est analysé puis supprimé immédiatement. Rien n'est conservé.",
         stages: ["Envoi de l'audio", "Prétraitement vocal", "Inférence du modèle", "Rédaction des conseils"],
@@ -545,7 +545,7 @@ const T = {
         tipsBy: { llm: "conseils rédigés par une IA à partir du verdict seul", template: "conseils de sécurité standards" } },
   ar: { kicker: "كاشف استنساخ الصوت", title1: "هل هذه الرسالة الصوتية", title2: "<em>منه</em> فعلًا؟", lede: "يستنسخ المحتالون الصوت من ثلاث ثوانٍ فقط. تحقّق من الرسالة الصوتية قبل أن ترسل أي مال.",
         ctaCheck: "افحص رسالة صوتية", ctaResults: "شاهد نتائجنا",
-        p1: "دقة على أصوات جديدة", p2: "لكل رسالة", p3: "نصائح أمان",
+        p1: "دقة على أصوات جديدة", p2b: "محلي", p2: "يبقى صوتك على جهازك", p3: "نصائح أمان",
         upload: "رفع ملف", record: "تسجيل", drop: "أسقط رسالة صوتية هنا أو اضغط للاختيار", recStart: "ابدأ التسجيل", recStop: "أوقف وحلّل",
         modelLabel: "النموذج", privacy: "يُحلَّل الصوت ثم يُحذف فورًا. لا نحتفظ بأي شيء.",
         stages: ["إرسال الصوت", "تهيئة الصوت", "تشغيل النموذج", "كتابة النصائح"],

@@ -3,9 +3,10 @@
 </p>
 
 <p align="center">
-  <a href="https://real-or-clone-9m7lxdq0i.gobrev.dev"><img alt="Live demo" src="https://img.shields.io/badge/Live_demo-try_it-D4FF3A?style=for-the-badge&labelColor=07080A"></a>
-  <a href="https://real-or-clone-9m7lxdq0i.gobrev.dev/demo.mp4"><img alt="90-second video" src="https://img.shields.io/badge/Video-90_s-FF4D5E?style=for-the-badge&labelColor=07080A"></a>
+  <a href="#run-it-on-your-computer"><img alt="Run it on your computer" src="https://img.shields.io/badge/Run_it-on_your_computer-D4FF3A?style=for-the-badge&labelColor=07080A"></a>
+  <a href="https://github.com/ilyasdaoudrma/real-or-clone/raw/main/web/demo.mp4"><img alt="90-second video" src="https://img.shields.io/badge/Video-90_s-FF4D5E?style=for-the-badge&labelColor=07080A"></a>
   <a href="https://github.com/ilyasdaoudrma/real-or-clone/raw/main/docs/Real-or-Clone.pptx"><img alt="Slides" src="https://img.shields.io/badge/Slides-pptx-F3F1EA?style=for-the-badge&labelColor=07080A"></a>
+  <a href="https://huggingface.co/IlyasDaoud/real-or-clone-xlsr"><img alt="Model on Hugging Face" src="https://img.shields.io/badge/Model-Hugging_Face-FFD21E?style=for-the-badge&labelColor=07080A&logo=huggingface"></a>
 </p>
 
 <p align="center">
@@ -19,7 +20,8 @@
 </p>
 
 <p align="center"><b>Scammers need 3 seconds of audio to clone a voice.</b><br>
-Real or Clone? checks a WhatsApp voice note in under a second and tells you — in Arabic, French or English — whether it is really them.</p>
+Real or Clone? checks a WhatsApp voice note and tells you — in Arabic, French or English — whether it is really them.<br>
+Free and open source: it runs on your own computer, and your audio never leaves it.</p>
 
 ---
 
@@ -101,20 +103,68 @@ All three runs are scored on the **same held-out test set: 10,122 clips from spe
 <img src="docs/figures/false_alarms_by_run.png" alt="Real voices wrongly flagged">
 </details>
 
-Full numbers, method and AI disclosure: [`SUBMISSION.md`](SUBMISSION.md).
+Full numbers, method and AI disclosure: [`SUBMISSION.md`](SUBMISSION.md). The data, its sources and how to rebuild it: [`DATA.md`](DATA.md) (also on Hugging Face: [`IlyasDaoud/real-or-clone-data`](https://huggingface.co/datasets/IlyasDaoud/real-or-clone-data)).
 
-## Try it
+## Run it on your computer
 
-1. Open **[real-or-clone-9m7lxdq0i.gobrev.dev](https://real-or-clone-9m7lxdq0i.gobrev.dev)** and sign in (Google or email).
-2. **Upload** a voice note (WhatsApp ogg/opus, m4a, mp3, wav · 1–60 s) or **Record** one.
-3. Read the verdict, the suspicious seconds and the tips; switch **ع / FR / EN**.
-4. Switch **Model** to *XLS-R 300M · before fine-tuning* and upload the same note — that is what fine-tuning adds.
-5. **History** to replay or delete your checks, **Dashboard** for your stats and our results.
+The app was hosted on NVIDIA Brev for the hackathon judging; it now runs on your own machine instead. No GPU needed:
+any recent laptop works (about 4 GB of free RAM and 5 GB of disk). A voice note takes a few seconds on a laptop CPU
+(about 2.6 s for a 9 s note on a Ryzen 5), under a second on a GPU.
+
+**1. Install the two tools it needs** (once)
+
+| | Python 3.10 – 3.12 | ffmpeg (reads WhatsApp / phone audio) |
+|---|---|---|
+| Windows | [python.org](https://www.python.org/downloads/) — tick *Add python.exe to PATH* | `winget install ffmpeg` |
+| macOS | `brew install python` | `brew install ffmpeg` |
+| Linux | `sudo apt install python3 python3-venv` | `sudo apt install ffmpeg` |
+
+**2. Download the app and install its libraries** (once, about 5 minutes)
+
+```bash
+git clone https://github.com/ilyasdaoudrma/real-or-clone
+cd real-or-clone
+python -m venv .venv
+```
+
+Activate the environment — Windows: `.venv\Scripts\activate` · macOS / Linux: `source .venv/bin/activate` — then:
+
+```bash
+pip install -r requirements.txt
+```
+
+On Linux without an NVIDIA GPU, run `pip install torch --index-url https://download.pytorch.org/whl/cpu` first — it saves a multi-GB CUDA download.
+
+No git? Click **Code → Download ZIP** at the top of this page and unzip it instead of `git clone`.
+
+**3. Start it**
+
+```bash
+python -m uvicorn api.main:app --port 8000
+```
+
+Open **http://localhost:8000**. The first start downloads the two models from Hugging Face (about 2.4 GB, once):
+[our fine-tuned detector](https://huggingface.co/IlyasDaoud/real-or-clone-xlsr) and the original XLS-R for the before/after switch.
+The page is ready when the terminal prints `Application startup complete`.
+
+**4. Use it**
+
+1. **Upload** a voice note (WhatsApp ogg/opus, m4a, mp3, wav · 1–60 s) or **Record** one with your microphone.
+2. Read the verdict, the suspicious seconds and the tips; switch **ع / FR / EN**.
+3. Switch **Model** to *XLS-R 300M · before fine-tuning* and check the same note — that is what fine-tuning adds.
+4. **Dashboard** shows how the model scores on our held-out test set.
+
+**Optional keys** — copy `.env.example` to `.env` to switch on the extras. Everything else works without them.
+
+| Key | Adds | Without it |
+|---|---|---|
+| `LLM_API_KEY` (free at [console.groq.com](https://console.groq.com)) | safety tips written by an LLM for each verdict | three fixed expert tips |
+| `CLERK_PUBLISHABLE_KEY` + `CLERK_SECRET_KEY` ([clerk.com](https://clerk.com)) | sign-in, private history and personal stats | no sign-in, nothing is saved |
 
 ## Reproduce it
 
 <details>
-<summary><b>Full pipeline on a GPU box (Brev, Ubuntu)</b></summary>
+<summary><b>Full pipeline on a GPU box (Brev, Ubuntu) — see <a href="DATA.md">DATA.md</a> for what each step builds</b></summary>
 
 ```bash
 git clone https://github.com/ilyasdaoudrma/real-or-clone && cd real-or-clone
@@ -148,7 +198,7 @@ CKPT=checkpoints/run_c uvicorn api.main:app --host 0.0.0.0 --port 8000
 
 ## Responsible AI
 
-- **Privacy** — login required; each user's audio and results are private and deletable item by item.
+- **Privacy** — the app runs on your own computer, so your audio never leaves it; with sign-in on, each user's checks are private and deletable item by item.
 - **LLM scope** — the LLM never hears the audio and cannot change the verdict; fixed expert tips if it fails.
 - **Consent** — the demo clone is the team lead's own voice, with written consent.
 - **Humility** — the app never says “certain” and always tells you to call back on a number you know.
@@ -166,7 +216,7 @@ CKPT=checkpoints/run_c uvicorn api.main:app --host 0.0.0.0 --port 8000
 | VoxPopuli | [`facebook/voxpopuli`](https://huggingface.co/datasets/facebook/voxpopuli) | CC0 | varied real speech |
 | MLAAD | [`mueller91/MLAAD`](https://huggingface.co/datasets/mueller91/MLAAD) | CC-BY-NC-4.0 | fake speech, 180+ generators |
 | In-the-Wild | [`mueller91/In-The-Wild`](https://huggingface.co/datasets/mueller91/In-The-Wild) | CC-BY-SA-4.0 | real + fake, speaker-split |
-| NVIDIA Brev | L40S 48 GB | — | generation, training, evaluation, serving |
+| NVIDIA Brev | L40S 48 GB | — | generation, training, evaluation, hosting during judging |
 | Clerk · SQLite · FastAPI · Motion | — | — | auth, history, API, animations |
 
 Code written with **Claude Code**; the team chose the approach, ran every GPU step, listened to the clones, checked the numbers and caught the shortcut. Background art generated with Higgsfield; video voiceover with ElevenLabs.
@@ -174,7 +224,7 @@ Code written with **Claude Code**; the team chose the approach, ran every GPU st
 ## License
 
 The **code** in this repository is released under the [MIT License](LICENSE).
-Models and datasets keep their own licences (see *Built with*). Because MLAAD is CC-BY-NC-4.0, **the trained detector weights are for non-commercial use only**; they are not included in this repository.
+Models and datasets keep their own licences (see *Built with*). Because MLAAD is CC-BY-NC-4.0, **the trained detector weights are for non-commercial use only**. They are published separately on Hugging Face ([`IlyasDaoud/real-or-clone-xlsr`](https://huggingface.co/IlyasDaoud/real-or-clone-xlsr)), which the app downloads automatically.
 
 ## Team
 

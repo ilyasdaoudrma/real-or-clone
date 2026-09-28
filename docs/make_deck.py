@@ -89,7 +89,7 @@ s = slide("", "GOMYCODE · Come Build with AI · Morocco · 27.09.2026", 0)
 text(s, 0.6, 1.9, 12, 1.6, [[("Real ", TEXT), ("or", RED), (" Clone?", TEXT)]], 80, bold=True, name="!!hero")
 text(s, 0.6, 3.45, 12, 0.8, "حقيقي أم مستنسخ؟ — detecting AI voice-clone scams in voice notes", 24, MUTED)
 text(s, 0.6, 5.2, 12, 1.2, ["Ilyas Daoud · Oualid Karmoun · Ayoub El Mouhib",
-                            [("Live: ", MUTED), ("real-or-clone-9m7lxdq0i.gobrev.dev", LIME)],
+                            [("Run it: ", MUTED), ("free & open source, on your own computer", LIME)],
                             [("Code: ", MUTED), ("github.com/ilyasdaoudrma/real-or-clone", LIME)]], 16)
 
 # 2 problem
@@ -102,7 +102,7 @@ text(s, 0.6, 4.8, 12, 1.5, ["“Mom, I had an accident. Send money now.” — a
                             [("Source: McAfee survey, 7,054 adults, 7 countries.", MUTED)]], 16)
 
 # 3 solution
-s = slide("Upload or record a voice note. Get the truth in < 1 s.", "Our solution", 2)
+s = slide("Upload or record a voice note. Get the truth in seconds.", "Our solution", 2)
 pic(s, shots / "2_result.png", 0.6, 2.1, h=5.0, name="!!shot")
 text(s, 7.0, 2.2, 5.8, 4.6, [[("✓ ", MINT), ("Verdict: likely real / likely clone / uncertain", TEXT)],
                              [("✓ ", MINT), ("Confidence + real-vs-clone probability bars", TEXT)],
@@ -166,14 +166,14 @@ text(s, 0.6, 2.1, 12, 4.8, [[("Models  ", LIME), ("XLS-R 300M (Meta, Apache-2.0,
                             [("Data  ", LIME), ("FLEURS (CC-BY) · VoxPopuli (CC0) · MLAAD (CC-BY-NC) · In-the-Wild (CC-BY-SA)", TEXT)],
                             [("Infra  ", LIME), ("NVIDIA Brev L40S · PyTorch · Transformers · FastAPI · Clerk · SQLite · Motion", TEXT)],
                             [("AI help  ", LIME), ("Claude Code wrote most of the code; the team chose the approach, ran every GPU step, listened to the clones, checked the numbers and caught the shortcut.", TEXT)],
-                            [("Try it  ", LIME), ("real-or-clone-9m7lxdq0i.gobrev.dev — sign in with Google or email", TEXT)]], 16)
+                            [("Try it  ", LIME), ("download the repo and run it on any laptop — steps in the README · model on Hugging Face: IlyasDaoud/real-or-clone-xlsr", TEXT)]], 16)
 
 # 11 thank you
 from pptx.enum.text import PP_ALIGN
 s = slide("", "", 10)
 text(s, 0.6, 2.3, 12.1, 2.0, [[("Thank you", TEXT)]], 110, bold=True, name="!!hero", align=PP_ALIGN.CENTER)
 text(s, 0.6, 4.35, 12.1, 0.6, [[("Real ", TEXT), ("or", RED), (" Clone?", TEXT), ("  ·  شكرًا  ·  Merci", MUTED)]], 22, align=PP_ALIGN.CENTER)
-text(s, 0.6, 5.4, 12.1, 0.5, [[("real-or-clone-9m7lxdq0i.gobrev.dev", LIME)]], 16, align=PP_ALIGN.CENTER)
+text(s, 0.6, 5.4, 12.1, 0.5, [[("github.com/ilyasdaoudrma/real-or-clone", LIME)]], 16, align=PP_ALIGN.CENTER)
 
 prs.save(D / "Real-or-Clone.pptx")
 print("saved", D / "Real-or-Clone.pptx", len(prs.slides), "slides")
