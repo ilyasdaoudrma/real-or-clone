@@ -228,6 +228,6 @@ Models and datasets keep their own licences (see *Built with*). Because MLAAD is
 
 ## Team
 
-**Ilyas Daoud** (lead, ML) · **Oualid Karmoun** (data, testing) · **Ayoub El Mouhib** (web app) · **Othman Mertah** (early planning)
+**El Asmi Ilyas Daoud** (lead, ML) · **Oualid Karmoun** (data, testing) · **Ayoub El Mouhib** (web app) · **Othman Mertah** (early planning)
 
 Built in one day at **GOMYCODE × NVIDIA — Come Build with AI**, Morocco, 27 September 2026.
